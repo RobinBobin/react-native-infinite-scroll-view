@@ -15,8 +15,8 @@ import {
 import Animated, {
   useAnimatedStyle
 } from "react-native-reanimated";
-import BaseItemType from "../data/BaseItemType";
-import PageDataHolder from "../data/PageDataHolder";
+import { BaseItemType } from "../data/BaseItemType";
+import { PageDataHolder } from "../data/PageDataHolder";
 
 const Page = forwardRef(<ItemT extends BaseItemType>(props: PageProps <ItemT>, ref: any) => {
   const animatedStyle = useAnimatedStyle(() => {
@@ -64,7 +64,7 @@ const Page = forwardRef(<ItemT extends BaseItemType>(props: PageProps <ItemT>, r
   );
 });
 
-export default Page;
+export { Page };
 
 export interface PageProps <ItemT extends BaseItemType> {
   backgroundColor: string,

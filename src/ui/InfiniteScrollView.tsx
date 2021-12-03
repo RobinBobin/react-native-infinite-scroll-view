@@ -11,11 +11,11 @@ import {
   View,
   ViewStyle
 } from "react-native";
-import BaseItemType from "../data/BaseItemType";
-import DataHolder from "../data/DataHolder";
-import Page from "./Page";
+import { BaseItemType } from "../data/BaseItemType";
+import { DataHolder } from "../data/DataHolder";
+import { Page } from "./Page";
 
-export default function InfiniteScrollView <ItemT extends BaseItemType> (props: InfiniteScrollViewProps <ItemT>) {
+export function InfiniteScrollView <ItemT extends BaseItemType> (props: InfiniteScrollViewProps <ItemT>) {
   const onLayout = useCallback(({nativeEvent}: LayoutChangeEvent) => {
     // console.log("onLayout", nativeEvent.layout);
   }, []);

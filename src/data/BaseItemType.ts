@@ -1,3 +1,3 @@
-export default interface BaseItemType {
+export interface BaseItemType {
   key: string
 };

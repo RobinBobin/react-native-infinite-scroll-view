@@ -1,10 +1,10 @@
 import {
   useMemo
 } from "react";
-import BaseItemType from "./BaseItemType";
-import PageDataHolder from "./PageDataHolder";
+import { BaseItemType } from "./BaseItemType";
+import { PageDataHolder } from "./PageDataHolder";
 
-export default class DataHolder <ItemT extends BaseItemType> {
+export class DataHolder <ItemT extends BaseItemType> {
   __maxItemCount: number;
   
   __page1 = new PageDataHolder <ItemT> ();

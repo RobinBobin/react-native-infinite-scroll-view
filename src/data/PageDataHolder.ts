@@ -1,6 +1,6 @@
-import BaseItemType from "./BaseItemType";
+import { BaseItemType } from "./BaseItemType";
 
-export default class PageDataHolder <ItemT extends BaseItemType> {
+export class PageDataHolder <ItemT extends BaseItemType> {
   __data: ReadonlyArray <StoredItemType <ItemT> >;
   
   __isPrevious: boolean;
