@@ -4,12 +4,12 @@ import {
   observable
 } from "mobx";
 import { LayoutRectangle } from "react-native";
-import { BaseItemType } from "./BaseItemType";
+import { BaseItemType } from "../types/data";
 import {
   PagePosition,
   UnusedPagePosition,
   UsedPagePosition
-} from "../utils/page";
+} from "../types/ui/page/Position";
 
 export class PageDataHolder <ItemT extends BaseItemType> {
   private __data: ReadonlyArray <StoredItemType <ItemT> > = [];

@@ -1,4 +1,3 @@
-import { observer } from "mobx-react-lite";
 import React, {
   useCallback,
   useMemo,
@@ -6,24 +5,21 @@ import React, {
 } from "react";
 import {
   LayoutChangeEvent,
-  StyleProp,
   StyleSheet,
-  View,
-  ViewStyle
+  View
 } from "react-native";
 import { Page } from "./Page";
-import { BaseItemType } from "../data/BaseItemType";
-import { DataHolder } from "../data/DataHolder";
-import { PageRef } from "../utils/page/Ref";
+import { ContextType } from "../types/context";
+import { PageRef } from "../types/ui/page/Ref";
+import { useContext } from "../utils/ui";
 
-const InfiniteScrollView = observer(
-  <ItemT extends BaseItemType> (
-    props: InfiniteScrollViewProps <ItemT>
-  ) => {
+const InfiniteScrollView = () => {
   const onLayout = useCallback(({nativeEvent}: LayoutChangeEvent) => {
   }, []);
   
-  const { pages, pageRefs } = usePages(props);
+  const context = useContext();
+  
+  const { pages, pageRefs } = usePages();
   
   // props.dataHolder.pages.forEach((page, index) => {
   //   console.log(`${index}, position: ${page.position}, layout: ${JSON.stringify(page.layout)}`);
@@ -32,39 +28,31 @@ const InfiniteScrollView = observer(
   return (
     <View
       onLayout={onLayout}
-      style={useContainerStyle(props)}
+      style={useContainerStyle(context)}
     >
       { pages }
     </View>
   );
-});
+};
 
 export { InfiniteScrollView };
 
-export interface InfiniteScrollViewProps <ItemT extends BaseItemType> {
-  dataHolder: DataHolder <ItemT>;
-  renderItem: RenderItem <ItemT>;
-  style: StyleProp <ViewStyle>;
-};
-
-export interface RenderItemInfo <ItemT extends BaseItemType> {
-  item: ItemT
-};
-
-export type RenderItem <ItemT extends BaseItemType> = (info: RenderItemInfo <ItemT>) => React.ReactElement;
-
-function useContainerStyle <ItemT extends BaseItemType> (props: InfiniteScrollViewProps <ItemT>) {
+function useContainerStyle(context: ContextType <any>) {
   return useMemo(() => [
-    props.style,
+    context.style,
     StyleSheet.create({
       container: {
+        flexDirection: context.dataHolder.horizontal ? "row" : "column",
         // overflow: "hidden"
       }
     }).container
-  ], [props.style]);
+  ], [
+    context.dataHolder.horizontal,
+    context.style
+  ]);
 }
 
-function usePages <ItemT extends BaseItemType> (props: InfiniteScrollViewProps <ItemT>) {
+function usePages() {
   const pageRefs = useRef([
     useRef <PageRef> (),
     useRef <PageRef> (),
@@ -72,20 +60,14 @@ function usePages <ItemT extends BaseItemType> (props: InfiniteScrollViewProps <
   ]).current;
   
   const pages = useMemo(() => {
-    const horizontal = StyleSheet.flatten(props.style).flexDirection === "row";
-    
     return Array.from(Array(3).keys()).map(index =>
       <Page
-        data={props.dataHolder.pages[index]}
-        horizontal={horizontal}
+        index={index}
         key={index}
         ref={pageRefs[index]}
       />
     );
-  }, [
-    props.dataHolder,
-    props.style
-  ]);
+  }, []);
   
   return useMemo(() => ({
     pages,

@@ -7,40 +7,38 @@ import React, {
 } from "react";
 import {
   LayoutChangeEvent,
-  LayoutRectangle,
-  StyleSheet
+  StyleSheet,
+  View
 } from "react-native";
-import Animated, {
-  useAnimatedStyle
-} from "react-native-reanimated";
-import { BaseItemType } from "../data/BaseItemType";
-import { PageDataHolder } from "../data/PageDataHolder";
-import { PageRef } from "../utils/page";
+import { ContextType } from "../types/context";
+import { PageRef } from "../types/ui/page/Ref";
+import { useContext } from "../utils/ui";
 
-const Page = observer(
-  <ItemT extends BaseItemType> (
-    props: PageProps <ItemT>,
-    ref: ForwardedRef <PageRef>
-  ) => {
-  const onLayout = useCallback(({nativeEvent}: LayoutChangeEvent) => {
-    props.data.layout = nativeEvent.layout;
-  }, []);
+const Page = observer((props: PageProps, ref: ForwardedRef <PageRef>) => {
+  const context = useContext();
   
-  const containerStyle = useContainerStyle(props);
+  const onLayout = useCallback(({nativeEvent}: LayoutChangeEvent) => {
+    context.dataHolder.pages[props.index].layout = nativeEvent.layout;
+  }, [
+    context
+    // = props.index can't change = //
+  ]);
+  
+  const containerStyle = useContainerStyle(context, props.index);
   
   usePageMethods(ref);
   
   return (
-    props.data.isUnused
+    false && context.dataHolder.pages[props.index].isUnused
     ?
       null
     :
-      <Animated.View
+      <View
         onLayout={onLayout}
         style={containerStyle}
       >
         
-      </Animated.View>
+      </View>
   );
 }, {
   forwardRef: true
@@ -48,28 +46,27 @@ const Page = observer(
 
 export { Page };
 
-export interface PageProps <ItemT extends BaseItemType> {
-  data: PageDataHolder <ItemT>,
-  horizontal?: boolean;
+interface PageProps {
+  index: number
 };
 
-function useContainerStyle <ItemT extends BaseItemType> (props: PageProps <ItemT>) {
+function useContainerStyle(context: ContextType <any>, index: number) {
   return useMemo(() => {
     return StyleSheet.create({
       container: {
         backgroundColor:
-          props.data.isPrevious ? "red"
-          : props.data.isMedium ? "green"
-          : props.data.isNext ? "blue"
+          context.dataHolder.pages[index].isPrevious ? "red"
+          : context.dataHolder.pages[index].isMedium ? "green"
+          : context.dataHolder.pages[index].isNext ? "blue"
           : "black",
         // position: "absolute",
-        [props.horizontal ? "width" : "height"]: 100,
-        // [props.horizontal ? "height" : "width"]: "100%"
+        [context.dataHolder.horizontal ? "width" : "height"]: 100,
+        // [context.dataHolder.horizontal ? "height" : "width"]: "100%"
       }
     }).container;
   }, [
-    props.data.position,
-    props.horizontal
+    context.dataHolder.horizontal,
+    context.dataHolder.pages[index].position
   ]);
 }
 

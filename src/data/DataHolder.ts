@@ -1,11 +1,12 @@
 import {
   useMemo
 } from "react";
-import { BaseItemType } from "./BaseItemType";
 import { PageDataHolder } from "./PageDataHolder";
-import { UsedPagePosition } from "../utils/page/Position";
+import { BaseItemType } from "../types/data";
+import { UsedPagePosition } from "../types/ui/page/Position";
 
 export class DataHolder <ItemT extends BaseItemType> {
+  private readonly __horizontal: boolean;
   private readonly __initialDatasetSize: number;
   private readonly __inverted: boolean;
   private readonly __itemsPerPage: number;
@@ -16,10 +17,19 @@ export class DataHolder <ItemT extends BaseItemType> {
     new PageDataHolder <ItemT> ()
   ];
   
-  constructor(inverted: boolean = false, itemsPerPage: number = 50) {
+  constructor(
+    horizontal: boolean = false,
+    inverted: boolean = false,
+    itemsPerPage: number = 50
+  ) {
+    this.__horizontal = horizontal,
     this.__initialDatasetSize = itemsPerPage * 2;
     this.__inverted = inverted;
     this.__itemsPerPage = itemsPerPage;
+  }
+  
+  get horizontal() {
+    return this.__horizontal;
   }
   
   get initialDatasetSize() {
@@ -43,6 +53,16 @@ export class DataHolder <ItemT extends BaseItemType> {
   }
 };
 
-export function useDataHolder <ItemT extends BaseItemType> (inverted?: boolean, itemsPerPage?: number) {
-  return useMemo(() => new DataHolder <ItemT> (inverted, itemsPerPage), []);
+export function useDataHolder <ItemT extends BaseItemType> (
+  horizontal?: boolean,
+  inverted?: boolean,
+  itemsPerPage?: number
+) {
+  return useMemo(() => (
+    new DataHolder <ItemT> (horizontal, inverted, itemsPerPage)
+  ), [
+    horizontal,
+    inverted,
+    itemsPerPage
+  ]);
 };
