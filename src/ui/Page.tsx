@@ -1,11 +1,9 @@
+import { observer } from "mobx-react-lite";
 import React, {
-  MutableRefObject,
   ForwardedRef,
-  forwardRef,
   useCallback,
   useImperativeHandle,
-  useMemo,
-  useRef
+  useMemo
 } from "react";
 import {
   LayoutChangeEvent,
@@ -17,69 +15,65 @@ import Animated, {
 } from "react-native-reanimated";
 import { BaseItemType } from "../data/BaseItemType";
 import { PageDataHolder } from "../data/PageDataHolder";
+import { PageRef } from "../utils/page";
 
-const Page = forwardRef(<ItemT extends BaseItemType>(props: PageProps <ItemT>, ref: any) => {
-  const animatedStyle = useAnimatedStyle(() => {
-    const result = {};
-    
-    result[props.horizontal ? "start" : "top"] =
-      props.backgroundColor == "red" ? 0
-      : props.backgroundColor == "green" ? 100
-      : 200;
-    
-    result[props.horizontal ? "top" : "start"] = undefined;
-    
-    return result;
-  }, [props.horizontal]);
-  
-  const layout = useRef <LayoutRectangle> ();
-  
+const Page = observer(
+  <ItemT extends BaseItemType> (
+    props: PageProps <ItemT>,
+    ref: ForwardedRef <PageRef>
+  ) => {
   const onLayout = useCallback(({nativeEvent}: LayoutChangeEvent) => {
-    layout.current = nativeEvent.layout;
+    props.data.layout = nativeEvent.layout;
   }, []);
   
-  const styles = useMemo(() => {
-    return StyleSheet.create({
-      container: {
-        backgroundColor: props.backgroundColor,
-        position: "absolute",
-        [props.horizontal ? "width" : "height"]: 100,
-        [props.horizontal ? "height" : "width"]: "100%"
-      }
-    });
-  }, [
-    props.backgroundColor,
-    props.horizontal
-  ]);
+  const containerStyle = useContainerStyle(props);
   
-  usePageMethods(layout, props, ref);
+  usePageMethods(ref);
   
   return (
-    <Animated.View
-      onLayout={onLayout}
-      style={[styles.container, animatedStyle]}
-    >
-      
-    </Animated.View>
+    props.data.isUnused
+    ?
+      null
+    :
+      <Animated.View
+        onLayout={onLayout}
+        style={containerStyle}
+      >
+        
+      </Animated.View>
   );
+}, {
+  forwardRef: true
 });
 
 export { Page };
 
 export interface PageProps <ItemT extends BaseItemType> {
-  backgroundColor: string,
   data: PageDataHolder <ItemT>,
   horizontal?: boolean;
 };
 
-function usePageMethods <ItemT extends BaseItemType> (
-  layout: MutableRefObject <LayoutRectangle>,
-  props: PageProps <ItemT>,
-  ref: ForwardedRef <any>
-) {
-  return useImperativeHandle(ref, () => ({
-    getDimension() {
-      return props.horizontal ? layout.current?.width : layout.current?.height;
-    }
-  }), [props.horizontal]);
+function useContainerStyle <ItemT extends BaseItemType> (props: PageProps <ItemT>) {
+  return useMemo(() => {
+    return StyleSheet.create({
+      container: {
+        backgroundColor:
+          props.data.isPrevious ? "red"
+          : props.data.isMedium ? "green"
+          : props.data.isNext ? "blue"
+          : "black",
+        // position: "absolute",
+        [props.horizontal ? "width" : "height"]: 100,
+        // [props.horizontal ? "height" : "width"]: "100%"
+      }
+    }).container;
+  }, [
+    props.data.position,
+    props.horizontal
+  ]);
+}
+
+function usePageMethods(ref: ForwardedRef <PageRef>) {
+  useImperativeHandle(ref, () => ({
+  }), []);
 }

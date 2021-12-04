@@ -1,44 +1,82 @@
+import {
+  computed,
+  makeObservable,
+  observable
+} from "mobx";
+import { LayoutRectangle } from "react-native";
 import { BaseItemType } from "./BaseItemType";
+import {
+  PagePosition,
+  UnusedPagePosition,
+  UsedPagePosition
+} from "../utils/page";
 
 export class PageDataHolder <ItemT extends BaseItemType> {
-  __data: ReadonlyArray <StoredItemType <ItemT> >;
+  private __data: ReadonlyArray <StoredItemType <ItemT> > = [];
+  private __previousPosition: PagePosition;
   
-  __isPrevious: boolean;
-  __isMedium: boolean;
-  __isNext: boolean;
+  __layout: LayoutRectangle = null;
+  __position: PagePosition = UnusedPagePosition.unused;
+  
+  constructor() {
+    makeObservable(
+      this,
+      {
+        layout: computed,
+        position: computed,
+        __layout: observable,
+        __position: observable
+      }
+    );
+  }
   
   get data() {
     return this.__data;
   }
   
-  get isMedium() {
-    return this.__isMedium;
+  get isLayoutValid() {
+    return !!this.__layout;
   }
   
-  set isMedium(isMedium) {
-    this.__isMedium = isMedium;
+  get isMedium() {
+    return this.__position === UsedPagePosition.medium;
   }
   
   get isNext() {
-    return this.__isNext;
-  }
-  
-  set isNext(isNext) {
-    this.__isNext = isNext;
+    return this.__position === UsedPagePosition.next;
   }
   
   get isPrevious() {
-    return this.__isPrevious;
+    return this.__position === UsedPagePosition.previous;
   }
   
-  set isPrevious(isPrevious) {
-    this.__isPrevious = isPrevious;
+  get isUnused() {
+    return this.__position === UnusedPagePosition.unused;
   }
   
-  set(data: Array <ItemT>, begin: number, end: number) {
+  get layout() {
+    return this.__layout;
+  }
+  
+  set layout(layout: LayoutRectangle) {
+    this.__layout = layout;
+  }
+  
+  get position() {
+    return this.__position;
+  }
+  
+  set position(position: PagePosition) {
+    this.__previousPosition = this.__position;
+    this.__position = position;
+  }
+  
+  set(data: Array <ItemT>, begin: number, end: number, position: UsedPagePosition) {
     this.__data = data.slice(begin, end).map(item => ({
       item
     }));
+    
+    this.position = position;
   }
 };
 

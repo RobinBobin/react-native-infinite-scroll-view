@@ -3,55 +3,46 @@ import {
 } from "react";
 import { BaseItemType } from "./BaseItemType";
 import { PageDataHolder } from "./PageDataHolder";
+import { UsedPagePosition } from "../utils/page/Position";
 
 export class DataHolder <ItemT extends BaseItemType> {
-  __maxItemCount: number;
+  private readonly __initialDatasetSize: number;
+  private readonly __inverted: boolean;
+  private readonly __itemsPerPage: number;
   
-  __page1 = new PageDataHolder <ItemT> ();
-  __page2 = new PageDataHolder <ItemT> ();
-  __page3 = new PageDataHolder <ItemT> ();
+  private readonly __pages: ReadonlyArray <PageDataHolder <ItemT> > = [
+    new PageDataHolder <ItemT> (),
+    new PageDataHolder <ItemT> (),
+    new PageDataHolder <ItemT> ()
+  ];
   
-  __onSetData: Listener;
-  
-  constructor(itemsPerPage: number = 50) {
-    this.__maxItemCount = itemsPerPage * 3;
+  constructor(inverted: boolean = false, itemsPerPage: number = 50) {
+    this.__initialDatasetSize = itemsPerPage * 2;
+    this.__inverted = inverted;
+    this.__itemsPerPage = itemsPerPage;
   }
   
-  get maxItemCount() {
-    return this.__maxItemCount;
+  get initialDatasetSize() {
+    return this.__initialDatasetSize;
   }
   
-  get page1() {
-    return this.__page1;
-  }
-  
-  get page2() {
-    return this.__page2;
-  }
-  
-  get page3() {
-    return this.__page3;
+  get pages() {
+    return this.__pages;
   }
   
   set(data: Array <ItemT>) {
-    const itemsPerPage = this.maxItemCount / 3;
+    if (data.length > this.initialDatasetSize) {
+      throw new RangeError(`Initial dataset size ${data.length} can't exceed ${this.initialDatasetSize}`);
+    }
     
-    let index = 0;
+    const itemsPerPage1x = this.__itemsPerPage;
+    const itemsPerPage2x = itemsPerPage1x * 2;
     
-    this.__page1.set(data, index++ * itemsPerPage, index * itemsPerPage);
-    this.__page2.set(data, index++ * itemsPerPage, index * itemsPerPage);
-    this.__page3.set(data, index++ * itemsPerPage, index * itemsPerPage);
-    
-    this.__onSetData();
-  }
-  
-  _setListeners(onSetData: Listener) {
-    this.__onSetData = onSetData;
+    this.__pages[0].set(data, 0, itemsPerPage1x, UsedPagePosition.medium);
+    this.__pages[1].set(data, itemsPerPage1x, itemsPerPage2x, this.__inverted ? UsedPagePosition.previous : UsedPagePosition.next);
   }
 };
 
-export function useDataHolder <ItemT extends BaseItemType> (itemsPerPage?: number) {
-  return useMemo(() => new DataHolder <ItemT> (itemsPerPage), []);
+export function useDataHolder <ItemT extends BaseItemType> (inverted?: boolean, itemsPerPage?: number) {
+  return useMemo(() => new DataHolder <ItemT> (inverted, itemsPerPage), []);
 };
-
-type Listener = () => void;
