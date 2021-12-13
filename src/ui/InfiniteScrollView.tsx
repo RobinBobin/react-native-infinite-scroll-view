@@ -1,7 +1,6 @@
 import React, {
   useCallback,
-  useMemo,
-  useRef
+  useMemo
 } from "react";
 import {
   LayoutChangeEvent,
@@ -10,7 +9,6 @@ import {
 } from "react-native";
 import { Page } from "./Page";
 import { ContextType } from "../types/context";
-import { PageRef } from "../types/ui/page/Ref";
 import { useContext } from "../utils/ui";
 
 const InfiniteScrollView = () => {
@@ -19,18 +17,12 @@ const InfiniteScrollView = () => {
   
   const context = useContext();
   
-  const { pages, pageRefs } = usePages();
-  
-  // props.dataHolder.pages.forEach((page, index) => {
-  //   console.log(`${index}, position: ${page.position}, layout: ${JSON.stringify(page.layout)}`);
-  // });
-  
   return (
     <View
       onLayout={onLayout}
       style={useContainerStyle(context)}
     >
-      { pages }
+      <Page />
     </View>
   );
 };
@@ -42,35 +34,11 @@ function useContainerStyle(context: ContextType <any>) {
     context.style,
     StyleSheet.create({
       container: {
-        flexDirection: context.dataHolder.horizontal ? "row" : "column",
-        // overflow: "hidden"
+        overflow: "hidden"
       }
     }).container
   ], [
     context.dataHolder.horizontal,
     context.style
   ]);
-}
-
-function usePages() {
-  const pageRefs = useRef([
-    useRef <PageRef> (),
-    useRef <PageRef> (),
-    useRef <PageRef> (),
-  ]).current;
-  
-  const pages = useMemo(() => {
-    return Array.from(Array(3).keys()).map(index =>
-      <Page
-        index={index}
-        key={index}
-        ref={pageRefs[index]}
-      />
-    );
-  }, []);
-  
-  return useMemo(() => ({
-    pages,
-    pageRefs
-  }), [pages]);
 }
