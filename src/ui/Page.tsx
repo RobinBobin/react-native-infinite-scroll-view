@@ -15,6 +15,8 @@ import {
 } from "../utils/ui";
 
 const Page = observer(() => {
+  throw new Error("nope");
+  
   const context = useContext();
   
   const page = context.dataHolder.pages[0];

@@ -11,8 +11,8 @@ import {
   UsedPagePosition
 } from "../types/ui/page/Position";
 
-export class PageDataHolder <ItemT extends BaseItemType> {
-  private __data: ReadonlyArray <StoredItemType <ItemT> > = [];
+export class PageDataHolder {
+  private __data: ReadonlyArray <StoredItemType> = [];
   private __previousPosition: PagePosition;
   
   __layout: LayoutRectangle = null;
@@ -71,7 +71,7 @@ export class PageDataHolder <ItemT extends BaseItemType> {
     this.__position = position;
   }
   
-  set(data: Array <ItemT>, begin: number, end: number, position: UsedPagePosition) {
+  set(data: Array <BaseItemType>, begin: number, end: number, position: UsedPagePosition) {
     this.__data = data.slice(begin, end).map(item => ({
       item
     }));
@@ -80,6 +80,6 @@ export class PageDataHolder <ItemT extends BaseItemType> {
   }
 };
 
-interface StoredItemType <ItemT extends BaseItemType> {
-  item: ItemT
+interface StoredItemType {
+  item: BaseItemType
 };

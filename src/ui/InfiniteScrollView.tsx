@@ -22,7 +22,7 @@ const InfiniteScrollView = () => {
       onLayout={onLayout}
       style={useContainerStyle(context)}
     >
-      <Page />
+      {/* <Page /> */}
     </View>
   );
 };
@@ -37,8 +37,5 @@ function useContainerStyle(context: ContextType <any>) {
         overflow: "hidden"
       }
     }).container
-  ], [
-    context.dataHolder.horizontal,
-    context.style
-  ]);
+  ], [context.style]);
 }

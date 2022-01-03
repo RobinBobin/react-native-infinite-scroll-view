@@ -5,64 +5,51 @@ import { PageDataHolder } from "./PageDataHolder";
 import { BaseItemType } from "../types/data";
 import { UsedPagePosition } from "../types/ui/page/Position";
 
-export class DataHolder <ItemT extends BaseItemType> {
-  private readonly __horizontal: boolean;
-  private readonly __initialDatasetSize: number;
-  private readonly __inverted: boolean;
-  private readonly __itemsPerPage: number;
-  
-  private readonly __pages: ReadonlyArray <PageDataHolder <ItemT> > = [
-    new PageDataHolder <ItemT> (),
-    new PageDataHolder <ItemT> (),
-    new PageDataHolder <ItemT> ()
+export class DataHolder {
+  private readonly __pages: ReadonlyArray <PageDataHolder> = [
+    new PageDataHolder(),
+    new PageDataHolder(),
+    new PageDataHolder()
   ];
   
-  constructor(
-    horizontal: boolean = false,
-    inverted: boolean = false,
-    itemsPerPage: number = 50
+  set(
+    data: Array <BaseItemType>,
+    initiallyScrollToEnd = false,
+    itemsPerPage = 50
   ) {
-    this.__horizontal = horizontal,
-    this.__initialDatasetSize = itemsPerPage * 2;
-    this.__inverted = inverted;
-    this.__itemsPerPage = itemsPerPage;
-  }
-  
-  get horizontal() {
-    return this.__horizontal;
-  }
-  
-  get initialDatasetSize() {
-    return this.__initialDatasetSize;
-  }
-  
-  get pages() {
-    return this.__pages;
-  }
-  
-  set(data: Array <ItemT>) {
-    if (data.length > this.initialDatasetSize) {
-      throw new RangeError(`Initial dataset size ${data.length} can't exceed ${this.initialDatasetSize}`);
+    const maxLength = this.__pages.length * itemsPerPage;
+    
+    if (data.length > maxLength) {
+      throw new RangeError(`Dataset size (${data.length}) can't exceed ${maxLength}`);
     }
     
-    const itemsPerPage1x = this.__itemsPerPage;
-    const itemsPerPage2x = itemsPerPage1x * 2;
+    const itemsPerPage2x = itemsPerPage * 2;
+    const itemsPerPage3x = itemsPerPage * 3;
     
-    this.__pages[0].set(data, 0, itemsPerPage1x, UsedPagePosition.medium);
-    this.__pages[1].set(data, itemsPerPage1x, itemsPerPage2x, this.__inverted ? UsedPagePosition.previous : UsedPagePosition.next);
+    if (data.length > itemsPerPage2x) {
+      this.__pages[0].set(data, 0, itemsPerPage, UsedPagePosition.previous);
+      this.__pages[1].set(data, itemsPerPage, itemsPerPage2x, UsedPagePosition.medium);
+      this.__pages[2].set(data, itemsPerPage2x, itemsPerPage3x, UsedPagePosition.next);
+    } else if (data.length > itemsPerPage) {
+      this.__pages[0].set(
+        data,
+        0,
+        itemsPerPage,
+        initiallyScrollToEnd ? UsedPagePosition.previous : UsedPagePosition.medium
+      );
+      
+      this.__pages[1].set(
+        data,
+        itemsPerPage,
+        itemsPerPage2x,
+        initiallyScrollToEnd ? UsedPagePosition.medium : UsedPagePosition.next
+      );
+    } else {
+      this.__pages[0].set(data, 0, data.length, UsedPagePosition.medium);
+    }
   }
 };
 
-export function useDataHolder <ItemT extends BaseItemType> (
-  horizontal?: boolean,
-  inverted?: boolean,
-  itemsPerPage?: number
-) {
-  return useMemo(() => (
-    new DataHolder <ItemT> (horizontal, inverted, itemsPerPage)
-  ), [
-    horizontal,
-    inverted,
-    itemsPerPage
-  ]);
+export function useDataHolder() {
+  return useMemo(() => new DataHolder(), []);
 };
