@@ -9,7 +9,10 @@ import {
   View
 } from "react-native";
 import { ContextType } from "../types/context";
-import { useContext } from "../utils/ui";
+import {
+  getFlexDirection,
+  useContext
+} from "../utils/ui";
 
 const Page = observer(() => {
   const context = useContext();
@@ -53,7 +56,7 @@ function useContainerStyle(context: ContextType <any>) {
     return StyleSheet.create({
       container: {
         backgroundColor: "pink",
-        flexDirection: context.dataHolder.horizontal ? "row" : "column"
+        flexDirection: getFlexDirection(context.dataHolder)
       }
     }).container;
   }, [
