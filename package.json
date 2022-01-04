@@ -4,11 +4,13 @@
     "url": "https://github.com/RobinBobin/react-native-infinite-scroll-view/issues"
   },
   "dependencies": {
+    "deep-equal": "^2.0.5",
     "mobx": "^6.3.8",
     "mobx-react-lite": "^3.2.2"
   },
   "description": "Infinite scroll view for ReactNative.",
   "devDependencies": {
+    "@types/deep-equal": "^1.0.1",
     "@types/react-native": "^0.66.6",
     "react-native-reanimated": "^2.2.4"
   },
@@ -26,5 +28,5 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "0.0.2"
+  "version": "0.0.3"
 }
