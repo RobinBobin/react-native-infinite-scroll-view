@@ -5,7 +5,7 @@ import { PageDataHolder } from "./PageDataHolder";
 import { BaseItemType } from "../types/data";
 import { UsedPagePosition } from "../types/ui/page/Position";
 
-export class DataHolder {
+export class DataHolder <ItemT extends BaseItemType> {
   private readonly __pages: ReadonlyArray <PageDataHolder> = [
     new PageDataHolder(),
     new PageDataHolder(),
@@ -13,7 +13,7 @@ export class DataHolder {
   ];
   
   set(
-    data: Array <BaseItemType>,
+    data: Array <ItemT>,
     initiallyScrollToEnd = false,
     itemsPerPage = 50
   ) {
@@ -50,6 +50,6 @@ export class DataHolder {
   }
 };
 
-export function useDataHolder() {
-  return useMemo(() => new DataHolder(), []);
+export function useDataHolder <ItemT extends BaseItemType> () {
+  return useMemo(() => new DataHolder <ItemT> (), []);
 };

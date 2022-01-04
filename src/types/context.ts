@@ -7,7 +7,7 @@ import { RenderItem } from "./ui";
 import { DataHolder } from "../data/DataHolder";
 
 export interface ContextType <ItemT extends BaseItemType> {
-  dataHolder: DataHolder;
+  dataHolder: DataHolder <ItemT>;
   renderItem: RenderItem <ItemT>;
   style: StyleProp <ViewStyle>;
 };
