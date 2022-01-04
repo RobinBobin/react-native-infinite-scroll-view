@@ -22,7 +22,9 @@ export default <ItemT extends BaseItemType> () => {
     );
   };
   
-  return React.memo(InfiniteScrollViewWithContext, (prev, next) => deepEqual(prev, next, {
-    strict: true
-  }));
+  return React.memo(InfiniteScrollViewWithContext, deepEqualStrict);
 };
+
+function deepEqualStrict(actual: any, expected: any) {
+  return deepEqual(actual, expected, { strict: true });
+}

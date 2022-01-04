@@ -1,4 +1,3 @@
-import { observer } from "mobx-react-lite";
 import React, {
   useCallback,
   useMemo
@@ -8,60 +7,75 @@ import {
   StyleSheet,
   View
 } from "react-native";
+import { PageDataHolder } from "../data/PageDataHolder";
 import { ContextType } from "../types/context";
-import {
-  getFlexDirection,
-  useContext
-} from "../utils/ui";
+import { useContext } from "../utils/ui";
+import "../../wdyr";
 
-const Page = observer(() => {
-  throw new Error("nope");
-  
+const Page: React.FC <PageProps> = React.memo(({page}) => {
   const context = useContext();
+  const containerStyle = useContainerStyle(context);
+  const onLayout = useOnLayout(page);
+  const items = useItems(context, page);
   
-  const page = context.dataHolder.pages[0];
-  
-  const onLayout = useCallback(({nativeEvent}: LayoutChangeEvent) => {
-    page.layout = nativeEvent.layout;
-    
-    console.log(`Page 0, layout: ${JSON.stringify(page.layout)}`);
-  }, [context]);
-  
-  console.log(`Page 0, position: ${page.position}, item count: ${page.data.length}`);
+  if (page) {
+    console.log(`Page '${page.position}', item count: ${page.data.length}`);
+  }
   
   return (
-    <View
-      onLayout={onLayout}
-      style={useContainerStyle(context)}
-    >
-      {
-        page.data.map((item, index) => (
-          <View
-            key={index}
-          >
-            {
-              context.renderItem({
-                item: item.item
-              })
-            }
-          </View>
-        ))
-      }
-    </View>
+    !page
+    ?
+      null
+    :
+      <View
+        onLayout={onLayout}
+        style={containerStyle}
+      >
+        { items }
+      </View>
   );
 });
 
+Page.whyDidYouRender = {
+  customName: "Page"
+};
+
+interface PageProps {
+  page: PageDataHolder
+}
+
 export { Page };
 
-function useContainerStyle(context: ContextType <any>) {
-  return useMemo(() => {
-    return StyleSheet.create({
-      container: {
-        backgroundColor: "pink",
-        flexDirection: getFlexDirection(context.dataHolder)
+const useContainerStyle = (context: ContextType <any>) => (
+  useMemo(() => StyleSheet.create({
+    container: {
+      backgroundColor: "pink",
+      // @ts-ignore
+      flexDirection: context.style.flexDirection
+    }
+  }).container, [context.style])
+);
+
+const useItems = (context: ContextType <any>, page: PageDataHolder) => (
+  useMemo(() => page?.data.map((item, index) => (
+    <View
+      key={index}
+    >
+      {
+        context.renderItem({
+          item: item.item
+        })
       }
-    }).container;
-  }, [
-    context.dataHolder.horizontal
-  ]);
-}
+    </View>
+  )), [context, page])
+);
+
+const useOnLayout = (page: PageDataHolder) => (
+  useCallback(({nativeEvent}: LayoutChangeEvent) => {
+    if (page) {
+      page.layout = nativeEvent.layout;
+      
+      console.log(`Page '${page.position}', layout: ${JSON.stringify(page.layout)}`);
+    }
+  }, [page])
+);

@@ -12,6 +12,7 @@
   "devDependencies": {
     "@types/deep-equal": "^1.0.1",
     "@types/react-native": "^0.66.6",
+    "@welldone-software/why-did-you-render": "^6.2.3",
     "react-native-reanimated": "^2.2.4"
   },
   "homepage": "https://github.com/RobinBobin/react-native-infinite-scroll-view#readme",

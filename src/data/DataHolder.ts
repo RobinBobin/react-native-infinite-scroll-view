@@ -3,7 +3,10 @@ import {
 } from "react";
 import { PageDataHolder } from "./PageDataHolder";
 import { BaseItemType } from "../types/data";
-import { UsedPagePosition } from "../types/ui/page/Position";
+import {
+  UsedPagePosition,
+  UnusedPagePosition
+} from "../types/ui/page/Position";
 
 export class DataHolder <ItemT extends BaseItemType> {
   private readonly __pages: ReadonlyArray <PageDataHolder> = [
@@ -11,6 +14,22 @@ export class DataHolder <ItemT extends BaseItemType> {
     new PageDataHolder(),
     new PageDataHolder()
   ];
+  
+  getPages(): {
+    previous?: PageDataHolder;
+    medium?: PageDataHolder;
+    next?: PageDataHolder
+  } {
+    const result = {};
+    
+    this.__pages.forEach(page => {
+      if (page.position !== UnusedPagePosition.unused) {
+        result[page.position] = page;
+      }
+    });
+    
+    return result;
+  }
   
   set(
     data: Array <ItemT>,
