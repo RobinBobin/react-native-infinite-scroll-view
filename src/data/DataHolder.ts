@@ -63,7 +63,7 @@ export class DataHolder <ItemT extends BaseItemType> {
         itemsPerPage2x,
         initiallyScrollToEnd ? UsedPagePosition.medium : UsedPagePosition.next
       );
-    } else {
+    } else if (data.length) {
       this.__pages[0].set(data, 0, data.length, UsedPagePosition.medium);
     }
   }
