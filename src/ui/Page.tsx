@@ -9,12 +9,13 @@ import {
 } from "react-native";
 import { PageDataHolder } from "../data/PageDataHolder";
 import { ContextType } from "../types/context";
+import { UsedPagePosition } from "../types/ui/page/Position";
 import { useContext } from "../utils/ui";
 import "../../wdyr";
 
 const Page: React.FC <PageProps> = React.memo(({page}) => {
   const context = useContext();
-  const containerStyle = useContainerStyle(context);
+  const containerStyle = useContainerStyle(context, page);
   const onLayout = useOnLayout(page);
   const items = useItems(context, page);
   
@@ -46,14 +47,18 @@ interface PageProps {
 
 export { Page };
 
-const useContainerStyle = (context: ContextType <any>) => (
+const useContainerStyle = (context: ContextType <any>, page: PageDataHolder) => (
   useMemo(() => StyleSheet.create({
     container: {
-      backgroundColor: "pink",
+      backgroundColor:
+        page?.position === UsedPagePosition.previous ? "pink"
+        : page?.position === UsedPagePosition.medium ? "lightgreen"
+        : page?.position === UsedPagePosition.next ? "lightblue"
+        : "black",
       // @ts-ignore
       flexDirection: context.style.flexDirection
     }
-  }).container, [context.style])
+  }).container, [context.style, page])
 );
 
 const useItems = (context: ContextType <any>, page: PageDataHolder) => (

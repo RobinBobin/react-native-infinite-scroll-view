@@ -33,8 +33,10 @@ export class DataHolder <ItemT extends BaseItemType> {
   
   set(
     data: Array <ItemT>,
-    initiallyScrollToEnd = false,
-    itemsPerPage = 50
+    {
+      initiallyScrollToEnd = false,
+      itemsPerPage = 50
+    }
   ) {
     const maxLength = this.__pages.length * itemsPerPage;
     
@@ -43,26 +45,41 @@ export class DataHolder <ItemT extends BaseItemType> {
     }
     
     const itemsPerPage2x = itemsPerPage * 2;
-    const itemsPerPage3x = itemsPerPage * 3;
     
     if (data.length > itemsPerPage2x) {
       this.__pages[0].set(data, 0, itemsPerPage, UsedPagePosition.previous);
       this.__pages[1].set(data, itemsPerPage, itemsPerPage2x, UsedPagePosition.medium);
-      this.__pages[2].set(data, itemsPerPage2x, itemsPerPage3x, UsedPagePosition.next);
+      this.__pages[2].set(data, itemsPerPage2x, itemsPerPage * 3, UsedPagePosition.next);
     } else if (data.length > itemsPerPage) {
-      this.__pages[0].set(
-        data,
-        0,
-        itemsPerPage,
-        initiallyScrollToEnd ? UsedPagePosition.previous : UsedPagePosition.medium
-      );
-      
-      this.__pages[1].set(
-        data,
-        itemsPerPage,
-        itemsPerPage2x,
-        initiallyScrollToEnd ? UsedPagePosition.medium : UsedPagePosition.next
-      );
+      if (initiallyScrollToEnd) {
+        this.__pages[0].set(
+          data,
+          data.length - itemsPerPage,
+          data.length,
+          UsedPagePosition.medium
+        );
+        
+        this.__pages[1].set(
+          data,
+          0,
+          data.length - itemsPerPage,
+          UsedPagePosition.previous
+        );
+      } else {
+        this.__pages[0].set(
+          data,
+          0,
+          itemsPerPage,
+          UsedPagePosition.medium
+        );
+        
+        this.__pages[0].set(
+          data,
+          itemsPerPage,
+          data.length,
+          UsedPagePosition.next
+        );
+      }
     } else if (data.length) {
       this.__pages[0].set(data, 0, data.length, UsedPagePosition.medium);
     }
