@@ -4,23 +4,30 @@ import React, {
   useState
 } from "react";
 import {
+  ImageStyle,
   LayoutChangeEvent,
   StyleSheet,
-  View
+  TextStyle,
+  View,
+  ViewStyle
 } from "react-native";
+import Animated, {
+  AnimatedStyleProp
+} from "react-native-reanimated";
 import { PageDataHolder } from "../data/PageDataHolder";
 import { ContextType } from "../types/context";
 import { UsedPagePosition } from "../types/ui/page/Position";
 import {
+  getFlexDirection,
   isVertical,
   useContext
 } from "../utils/ui";
 import "../../wdyr";
 
-let Page: React.FC <PageProps> = ({page}) => {
+let Page: React.FC <PageProps> = ({page, pageAnimatedStyle}) => {
   const context = useContext();
   const [top, setTop] = useState <number> (0);
-  const containerStyle = useContainerStyle(context, page, top);
+  const containerStyle = useContainerStyle(context, page, pageAnimatedStyle, top);
   const items = useItems(context, page);
   const onLayout = useOnLayout(context, page, setTop);
   
@@ -35,12 +42,12 @@ let Page: React.FC <PageProps> = ({page}) => {
     ?
       null
     :
-      <View
+      <Animated.View
         onLayout={onLayout}
         style={containerStyle}
       >
         { items }
-      </View>
+      </Animated.View>
   );
 };
 
@@ -50,8 +57,11 @@ Page.whyDidYouRender = {
 
 Page = React.memo(Page);
 
+type PageAnimatedStyle = AnimatedStyleProp <ViewStyle | ImageStyle | TextStyle>;
+
 interface PageProps {
-  page: PageDataHolder
+  page: PageDataHolder;
+  pageAnimatedStyle: PageAnimatedStyle;
 }
 
 export { Page };
@@ -59,28 +69,29 @@ export { Page };
 const useContainerStyle = (
   context: ContextType <any>,
   page: PageDataHolder,
+  pageAnimatedStyle: PageAnimatedStyle,
   top: number
 ) => (
   useMemo(() => {
     console.log(`Page '${page?.position ?? "<no position>"}' useContainerStyle()`);
     
     if (page) {
-      // @ts-ignore
-      const flexDirection = context.style.flexDirection;
-      
-      return StyleSheet.create({
-        container: {
-          backgroundColor:
-            page.position === UsedPagePosition.previous ? "pink"
-            : page.position === UsedPagePosition.medium ? "lightgreen"
-            : page.position === UsedPagePosition.next ? "lightblue"
-            : "black",
-          flexDirection,
-          position: "absolute",
-          top,
-          [isVertical(flexDirection) ? "width" : "height"]: "100%"
-        }
-      }).container;
+      return [
+        StyleSheet.create({
+          container: {
+            backgroundColor:
+              page.position === UsedPagePosition.previous ? "pink"
+              : page.position === UsedPagePosition.medium ? "lightgreen"
+              : page.position === UsedPagePosition.next ? "lightblue"
+              : "black",
+            flexDirection: getFlexDirection(context.style),
+            position: "absolute",
+            top,
+            [isVertical(context.style) ? "width" : "height"]: "100%"
+          }
+        }).container,
+        pageAnimatedStyle
+      ];
     }
   }, [context.style, page, top])
 );
@@ -114,5 +125,5 @@ const useOnLayout = (
     setTop(page.layout.y);
     
     console.log(`Page '${page.position}', layout: ${JSON.stringify(nativeEvent.layout)}, page layout: ${JSON.stringify(page.layout)}`);
-  }, [context, page])
+  }, [context.dataHolder, page])
 );

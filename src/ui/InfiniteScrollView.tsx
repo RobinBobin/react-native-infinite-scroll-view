@@ -1,16 +1,27 @@
 import { observer } from "mobx-react-lite";
 import React, {
-  useCallback,
-  useMemo
+  useCallback
 } from "react";
 import {
   LayoutChangeEvent,
-  StyleSheet,
-  View
+  StyleSheet
 } from "react-native";
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent
+} from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue
+} from "react-native-reanimated";
 import { Page } from "./Page";
 import { ContextType } from "../types/context";
-import { useContext } from "../utils/ui";
+import {
+  isVertical,
+  useContext
+} from "../utils/ui";
 import "../../wdyr";
 
 let InfiniteScrollView: React.FC = () => {
@@ -18,17 +29,40 @@ let InfiniteScrollView: React.FC = () => {
   
   const context = useContext();
   
+  const {
+    gestureHandler,
+    pageAnimatedStyle
+  } = useGestureHandler(context);
+  
   const { previous, medium, next } = context.dataHolder.pageReferences;
   
   return (
-    <View
+    <GestureHandlerRootView
       onLayout={useOnLayout()}
-      style={useContainerStyle(context)}
+      style={context.style}
     >
-      <Page page={previous} />
-      <Page page={medium} />
-      <Page page={next} />
-    </View>
+      <PanGestureHandler
+        maxPointers={1}
+        onGestureEvent={gestureHandler}
+      >
+        <Animated.View
+          style={styles.pageContainer}
+        >
+          <Page
+            page={previous}
+            pageAnimatedStyle={pageAnimatedStyle}
+          />
+          <Page
+            page={medium}
+            pageAnimatedStyle={pageAnimatedStyle}
+          />
+          <Page
+            page={next}
+            pageAnimatedStyle={pageAnimatedStyle}
+          />
+        </Animated.View>
+      </PanGestureHandler>
+    </GestureHandlerRootView>
   );
 };
 
@@ -40,20 +74,48 @@ InfiniteScrollView = React.memo(observer(InfiniteScrollView));
 
 export { InfiniteScrollView };
 
-const useContainerStyle = (context: ContextType <any>) => (
-  useMemo(() => {
-    console.log("InfiniteScrollView useContainerStyle()");
+const styles = StyleSheet.create({
+  pageContainer: {
+    flex: 1,
+    overflow: "hidden"
+  }
+});
+
+const useGestureHandler = (context: ContextType <any>) => {
+  const translation = useSharedValue(0);
+  const vertical = isVertical(context.style);
+  
+  const pageAnimatedStyle = useAnimatedStyle(() => {
+    const t = vertical ? {
+      translateY: translation.value
+    } : {
+      translateX: translation.value
+    };
     
-    return [
-      context.style,
-      StyleSheet.create({
-        container: {
-          overflow: "hidden"
-        }
-      }).container
-    ];
-  }, [context.style])
-);
+    return {
+      transform: [t]
+    };
+  }, [vertical]);
+  
+  const gestureHandler = useAnimatedGestureHandler <
+    PanGestureHandlerGestureEvent,
+    {
+      initialTranslation: number
+    }
+  > ({
+    onActive(event, context) {
+      translation.value = context.initialTranslation + event[`translation${vertical ? "Y" : "X"}`];
+    },
+    onStart(_, context) {
+      context.initialTranslation = translation.value;
+    }
+  }, [vertical]);
+  
+  return {
+    gestureHandler,
+    pageAnimatedStyle
+  };
+};
 
 const useOnLayout = () => (
   useCallback(({nativeEvent}: LayoutChangeEvent) => {
