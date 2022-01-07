@@ -13,17 +13,16 @@ import { ContextType } from "../types/context";
 import { useContext } from "../utils/ui";
 import "../../wdyr";
 
-const InfiniteScrollView: React.FC = React.memo(observer(() => {
-  const onLayout = useCallback(({nativeEvent}: LayoutChangeEvent) => {
-  }, []);
+let InfiniteScrollView: React.FC = () => {
+  console.log("render InfiniteScrollView");
   
   const context = useContext();
   
-  const { previous, medium, next } = context.dataHolder.getPages();
+  const { previous, medium, next } = context.dataHolder.pageReferences;
   
   return (
     <View
-      onLayout={onLayout}
+      onLayout={useOnLayout()}
       style={useContainerStyle(context)}
     >
       <Page page={previous} />
@@ -31,21 +30,32 @@ const InfiniteScrollView: React.FC = React.memo(observer(() => {
       <Page page={next} />
     </View>
   );
-}));
+};
 
 InfiniteScrollView.whyDidYouRender = {
   customName: "InfiniteScrollView"
 };
 
+InfiniteScrollView = React.memo(observer(InfiniteScrollView));
+
 export { InfiniteScrollView };
 
-function useContainerStyle(context: ContextType <any>) {
-  return useMemo(() => [
-    context.style,
-    StyleSheet.create({
-      container: {
-        overflow: "hidden"
-      }
-    }).container
-  ], [context.style]);
-}
+const useContainerStyle = (context: ContextType <any>) => (
+  useMemo(() => {
+    console.log("InfiniteScrollView useContainerStyle()");
+    
+    return [
+      context.style,
+      StyleSheet.create({
+        container: {
+          overflow: "hidden"
+        }
+      }).container
+    ];
+  }, [context.style])
+);
+
+const useOnLayout = () => (
+  useCallback(({nativeEvent}: LayoutChangeEvent) => {
+  }, [])
+);

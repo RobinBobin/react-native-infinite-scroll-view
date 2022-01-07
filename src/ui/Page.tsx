@@ -1,6 +1,7 @@
 import React, {
   useCallback,
-  useMemo
+  useMemo,
+  useState
 } from "react";
 import {
   LayoutChangeEvent,
@@ -10,17 +11,23 @@ import {
 import { PageDataHolder } from "../data/PageDataHolder";
 import { ContextType } from "../types/context";
 import { UsedPagePosition } from "../types/ui/page/Position";
-import { useContext } from "../utils/ui";
+import {
+  isVertical,
+  useContext
+} from "../utils/ui";
 import "../../wdyr";
 
-const Page: React.FC <PageProps> = React.memo(({page}) => {
+let Page: React.FC <PageProps> = ({page}) => {
   const context = useContext();
-  const containerStyle = useContainerStyle(context, page);
-  const onLayout = useOnLayout(page);
+  const [top, setTop] = useState <number> (0);
+  const containerStyle = useContainerStyle(context, page, top);
   const items = useItems(context, page);
+  const onLayout = useOnLayout(context, page, setTop);
   
   if (page) {
-    console.log(`Page '${page.position}', item count: ${page.data.length}`);
+    console.log(`render page '${page.position}', item count: ${page.data.length}`);
+  } else {
+    console.log("render page '<no position>'");
   }
   
   return (
@@ -35,11 +42,13 @@ const Page: React.FC <PageProps> = React.memo(({page}) => {
         { items }
       </View>
   );
-});
+};
 
 Page.whyDidYouRender = {
   customName: "Page"
 };
+
+Page = React.memo(Page);
 
 interface PageProps {
   page: PageDataHolder
@@ -47,40 +56,63 @@ interface PageProps {
 
 export { Page };
 
-const useContainerStyle = (context: ContextType <any>, page: PageDataHolder) => (
-  useMemo(() => StyleSheet.create({
-    container: {
-      backgroundColor:
-        page?.position === UsedPagePosition.previous ? "pink"
-        : page?.position === UsedPagePosition.medium ? "lightgreen"
-        : page?.position === UsedPagePosition.next ? "lightblue"
-        : "black",
+const useContainerStyle = (
+  context: ContextType <any>,
+  page: PageDataHolder,
+  top: number
+) => (
+  useMemo(() => {
+    console.log(`Page '${page?.position ?? "<no position>"}' useContainerStyle()`);
+    
+    if (page) {
       // @ts-ignore
-      flexDirection: context.style.flexDirection
+      const flexDirection = context.style.flexDirection;
+      
+      return StyleSheet.create({
+        container: {
+          backgroundColor:
+            page.position === UsedPagePosition.previous ? "pink"
+            : page.position === UsedPagePosition.medium ? "lightgreen"
+            : page.position === UsedPagePosition.next ? "lightblue"
+            : "black",
+          flexDirection,
+          position: "absolute",
+          top,
+          [isVertical(flexDirection) ? "width" : "height"]: "100%"
+        }
+      }).container;
     }
-  }).container, [context.style, page])
+  }, [context.style, page, top])
 );
 
 const useItems = (context: ContextType <any>, page: PageDataHolder) => (
-  useMemo(() => page?.data.map((item, index) => (
-    <View
-      key={index}
-    >
-      {
-        context.renderItem({
-          item: item.item
-        })
-      }
-    </View>
-  )), [context, page])
+  useMemo(() => {
+    console.log(`Page '${page?.position ?? "<no position>"}' useItems()`);
+    
+    return page?.data.map((item, index) => (
+      <View
+        key={index}
+      >
+        {
+          context.renderItem({
+            item: item.item
+          })
+        }
+      </View>
+    ));
+  }, [context.renderItem, page])
 );
 
-const useOnLayout = (page: PageDataHolder) => (
+const useOnLayout = (
+  context: ContextType <any>,
+  page: PageDataHolder,
+  setTop: React.Dispatch <number>
+) => (
   useCallback(({nativeEvent}: LayoutChangeEvent) => {
-    if (page) {
-      page.layout = nativeEvent.layout;
-      
-      console.log(`Page '${page.position}', layout: ${JSON.stringify(page.layout)}`);
-    }
-  }, [page])
+    context.dataHolder.setLayout(nativeEvent.layout, page);
+    
+    setTop(page.layout.y);
+    
+    console.log(`Page '${page.position}', layout: ${JSON.stringify(nativeEvent.layout)}, page layout: ${JSON.stringify(page.layout)}`);
+  }, [context, page])
 );

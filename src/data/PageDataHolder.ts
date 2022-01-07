@@ -1,8 +1,3 @@
-import {
-  computed,
-  makeObservable,
-  observable
-} from "mobx";
 import { LayoutRectangle } from "react-native";
 import { BaseItemType } from "../types/data";
 import {
@@ -12,49 +7,19 @@ import {
 } from "../types/ui/page/Position";
 
 export class PageDataHolder {
-  private __data: ReadonlyArray <StoredItemType> = [];
-  private __previousPosition: PagePosition;
-  
-  __layout: LayoutRectangle = null;
-  __position: PagePosition = UnusedPagePosition.unused;
+  private __data: ReadonlyArray <StoredItemType>;
+  private __layout: Readonly <LayoutRectangle>;
+  private __position: PagePosition;
   
   constructor() {
-    makeObservable(
-      this,
-      {
-        layout: computed,
-        position: computed,
-        __layout: observable,
-        __position: observable
-      }
-    );
+    this.reset();
   }
   
   get data() {
     return this.__data;
   }
   
-  get isLayoutValid() {
-    return !!this.__layout;
-  }
-  
-  get isMedium() {
-    return this.__position === UsedPagePosition.medium;
-  }
-  
-  get isNext() {
-    return this.__position === UsedPagePosition.next;
-  }
-  
-  get isPrevious() {
-    return this.__position === UsedPagePosition.previous;
-  }
-  
-  get isUnused() {
-    return this.__position === UnusedPagePosition.unused;
-  }
-  
-  get layout() {
+  get layout(): Readonly <LayoutRectangle> {
     return this.__layout;
   }
   
@@ -67,8 +32,13 @@ export class PageDataHolder {
   }
   
   set position(position: PagePosition) {
-    this.__previousPosition = this.__position;
     this.__position = position;
+  }
+  
+  reset() {
+    this.__data = [];
+    this.__layout = null;
+    this.__position = UnusedPagePosition.unused;
   }
   
   set(data: Array <BaseItemType>, begin: number, end: number, position: UsedPagePosition) {
