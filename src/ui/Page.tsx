@@ -1,7 +1,7 @@
+import { observer } from "mobx-react-lite";
 import React, {
   useCallback,
-  useMemo,
-  useState
+  useMemo
 } from "react";
 import {
   ImageStyle,
@@ -17,6 +17,7 @@ import Animated, {
 import { PageDataHolder } from "../data/PageDataHolder";
 import { ContextType } from "../types/context";
 import { UsedPagePosition } from "../types/ui/page/Position";
+import { strictDeepEqual } from "../utils";
 import {
   getFlexDirection,
   isVertical,
@@ -26,10 +27,9 @@ import "../../wdyr";
 
 let Page: React.FC <PageProps> = ({page, pageAnimatedStyle}) => {
   const context = useContext();
-  const [top, setTop] = useState <number> (0);
-  const containerStyle = useContainerStyle(context, page, pageAnimatedStyle, top);
+  const containerStyle = useContainerStyle(context, page, pageAnimatedStyle);
   const items = useItems(context, page);
-  const onLayout = useOnLayout(context, page, setTop);
+  const onLayout = useOnLayout(context, page);
   
   if (page) {
     console.log(`render page '${page.position}', item count: ${page.data.length}`);
@@ -55,7 +55,9 @@ Page.whyDidYouRender = {
   customName: "Page"
 };
 
-Page = React.memo(Page);
+Page = React.memo(observer(Page), strictDeepEqual);
+
+export { Page };
 
 type PageAnimatedStyle = AnimatedStyleProp <ViewStyle | ImageStyle | TextStyle>;
 
@@ -64,18 +66,18 @@ interface PageProps {
   pageAnimatedStyle: PageAnimatedStyle;
 }
 
-export { Page };
-
 const useContainerStyle = (
   context: ContextType <any>,
   page: PageDataHolder,
-  pageAnimatedStyle: PageAnimatedStyle,
-  top: number
+  pageAnimatedStyle: PageAnimatedStyle
 ) => (
   useMemo(() => {
     console.log(`Page '${page?.position ?? "<no position>"}' useContainerStyle()`);
     
     if (page) {
+      const vertical = isVertical(context.style);
+      const origin = page.layout ? page.layout[vertical ? "y" : "x"] : undefined;
+      
       return [
         StyleSheet.create({
           container: {
@@ -86,14 +88,18 @@ const useContainerStyle = (
               : "black",
             flexDirection: getFlexDirection(context.style),
             position: "absolute",
-            top,
-            [isVertical(context.style) ? "width" : "height"]: "100%"
+            [vertical ? "top": "start"]: origin,
+            [vertical ? "width" : "height"]: "100%"
           }
         }).container,
         pageAnimatedStyle
       ];
     }
-  }, [context.style, page, top])
+  }, [
+    context.style,
+    page,
+    page?.rerenderRequest
+  ])
 );
 
 const useItems = (context: ContextType <any>, page: PageDataHolder) => (
@@ -111,19 +117,23 @@ const useItems = (context: ContextType <any>, page: PageDataHolder) => (
         }
       </View>
     ));
-  }, [context.renderItem, page])
+  }, [
+    context.renderItem,
+    page
+  ])
 );
 
 const useOnLayout = (
   context: ContextType <any>,
-  page: PageDataHolder,
-  setTop: React.Dispatch <number>
+  page: PageDataHolder
 ) => (
   useCallback(({nativeEvent}: LayoutChangeEvent) => {
-    context.dataHolder.setLayout(nativeEvent.layout, page);
+    console.log(`Page '${page.position}' onLayout()`);
     
-    setTop(page.layout.y);
-    
-    console.log(`Page '${page.position}', layout: ${JSON.stringify(nativeEvent.layout)}, page layout: ${JSON.stringify(page.layout)}`);
-  }, [context.dataHolder, page])
+    context.dataHolder.setPageLayout(nativeEvent.layout, page, isVertical(context.style));
+  }, [
+    context.style,
+    context.dataHolder,
+    page
+  ])
 );

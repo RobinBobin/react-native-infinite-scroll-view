@@ -64,33 +64,33 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
     const itemsPerPage2x = itemsPerPage * 2;
     
     if (data.length > itemsPerPage2x) {
-      this.__pages[0].set(data, 0, itemsPerPage, UsedPagePosition.previous);
-      this.__pages[1].set(data, itemsPerPage, itemsPerPage2x, UsedPagePosition.medium);
-      this.__pages[2].set(data, itemsPerPage2x, itemsPerPage * 3, UsedPagePosition.next);
+      this.__pages[0].setData(data, 0, itemsPerPage, UsedPagePosition.previous);
+      this.__pages[1].setData(data, itemsPerPage, itemsPerPage2x, UsedPagePosition.medium);
+      this.__pages[2].setData(data, itemsPerPage2x, itemsPerPage * 3, UsedPagePosition.next);
     } else if (data.length > itemsPerPage) {
       if (initiallyScrollToEnd) {
-        this.__pages[0].set(
+        this.__pages[0].setData(
           data,
           data.length - itemsPerPage,
           data.length,
           UsedPagePosition.medium
         );
         
-        this.__pages[1].set(
+        this.__pages[1].setData(
           data,
           0,
           data.length - itemsPerPage,
           UsedPagePosition.previous
         );
       } else {
-        this.__pages[0].set(
+        this.__pages[0].setData(
           data,
           0,
           itemsPerPage,
           UsedPagePosition.medium
         );
         
-        this.__pages[0].set(
+        this.__pages[0].setData(
           data,
           itemsPerPage,
           data.length,
@@ -98,7 +98,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
         );
       }
     } else if (data.length) {
-      this.__pages[0].set(data, 0, data.length, UsedPagePosition.medium);
+      this.__pages[0].setData(data, 0, data.length, UsedPagePosition.medium);
     }
     
     const pageReferences: PageReferences = {};
@@ -112,17 +112,43 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
     this.__pageReferences = pageReferences;
   }
   
-  setLayout(layout: Readonly <LayoutRectangle>, page: PageDataHolder) {
-    const l = {...layout};
+  setPageLayout(
+    nativeEventlayout: Readonly <LayoutRectangle>,
+    page: PageDataHolder,
+    vertical: boolean
+  ) {
+    const dimensionKey = vertical ? "height" : "width";
+    const originKey = vertical ? "y" : "x";
     
-    // TODO horizontal
-    
-    l.y = 
-      page.position === UsedPagePosition.previous ? (this.__pageReferences.medium.layout?.y ?? 0) - layout.height
-      : page.position === UsedPagePosition.medium ? this.__pageReferences.previous.layout.y + this.__pageReferences.previous.layout.height
-      : this.__pageReferences.medium.layout.y + this.__pageReferences.medium.layout.height;
-    
-    page.layout = l;
+    if (!page.layout) {
+      page.setLayout(
+        {
+          ...nativeEventlayout,
+          [originKey]: page.position === UsedPagePosition.previous ? -nativeEventlayout[dimensionKey]
+            : page.position === UsedPagePosition.medium ? 0
+            : this.__pageReferences.medium.layout[dimensionKey]
+        },
+        page.position !== UsedPagePosition.medium
+      );
+    } else if (page.setLayout(nativeEventlayout, false)) {
+      const keys = Object.values(UsedPagePosition);
+      
+      for (
+        let i = keys.indexOf(page.position as UsedPagePosition) + 1;
+        i < keys.length;
+        ++i
+      ) {
+        const layout = this.__pageReferences[keys[i - 1]].layout;
+        const thisPage = this.__pageReferences[keys[i]];
+        
+        const newLayout = {
+          ...thisPage.layout,
+          [originKey]: layout[originKey] + layout[dimensionKey]
+        }
+        
+        thisPage.setLayout(newLayout, true);
+      }
+    }
   }
 };
 
@@ -130,8 +156,6 @@ export function useDataHolder <ItemT extends BaseItemType> (): DataHolder <ItemT
   return useMemo(() => new DataHolderImpl <ItemT> (), []);
 };
 
-interface PageReferences {
-  previous?: PageDataHolder;
-  medium?: PageDataHolder;
-  next?: PageDataHolder;
-}
+type PageReferences = {
+  [key in UsedPagePosition]?: PageDataHolder
+};

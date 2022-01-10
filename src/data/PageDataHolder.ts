@@ -1,3 +1,9 @@
+import {
+  action,
+  computed,
+  makeObservable,
+  observable
+} from "mobx";
 import { LayoutRectangle } from "react-native";
 import { BaseItemType } from "../types/data";
 import {
@@ -5,14 +11,25 @@ import {
   UnusedPagePosition,
   UsedPagePosition
 } from "../types/ui/page/Position";
+import { strictDeepEqual } from "../utils";
 
 export class PageDataHolder {
   private __data: ReadonlyArray <StoredItemType>;
   private __layout: Readonly <LayoutRectangle>;
   private __position: PagePosition;
   
+  __rerenderRequest = 0;
+  
   constructor() {
     this.reset();
+    
+    makeObservable(
+      this, {
+        rerenderRequest: computed,
+        setLayout: action,
+        __rerenderRequest: observable
+      }
+    );
   }
   
   get data() {
@@ -23,10 +40,6 @@ export class PageDataHolder {
     return this.__layout;
   }
   
-  set layout(layout: LayoutRectangle) {
-    this.__layout = layout;
-  }
-  
   get position() {
     return this.__position;
   }
@@ -35,18 +48,42 @@ export class PageDataHolder {
     this.__position = position;
   }
   
+  get rerenderRequest() {
+    return this.__rerenderRequest;
+  }
+  
   reset() {
     this.__data = [];
     this.__layout = null;
     this.__position = UnusedPagePosition.unused;
   }
   
-  set(data: Array <BaseItemType>, begin: number, end: number, position: UsedPagePosition) {
+  setData(data: Array <BaseItemType>, begin: number, end: number, position: UsedPagePosition) {
     this.__data = data.slice(begin, end).map(item => ({
       item
     }));
     
     this.position = position;
+  }
+  
+  setLayout(layout: LayoutRectangle, rerender: boolean) {
+    console.log(`Page '${this.__position}' setLayout()`);
+    
+    const layoutSet = !strictDeepEqual(this.__layout, layout);
+    
+    if (layoutSet) {
+      console.log(`Current layout: ${JSON.stringify(this.__layout)}, new layout: ${JSON.stringify(layout)}, rerender: ${rerender}`);
+      
+      this.__layout = layout;
+      
+      if (rerender) {
+        this.__rerenderRequest ^= 1;
+      }
+    } else {
+      console.log("skipping");
+    }
+    
+    return layoutSet;
   }
 };
 

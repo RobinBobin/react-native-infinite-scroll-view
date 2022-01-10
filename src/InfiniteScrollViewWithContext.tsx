@@ -1,4 +1,3 @@
-import deepEqual from "deep-equal";
 import React from "react";
 import { StyleSheet } from "react-native";
 import Context from "./Context";
@@ -6,6 +5,7 @@ import { DataHolder } from "./data/DataHolder";
 import { ContextType } from "./types/context";
 import { BaseItemType } from "./types/data";
 import { InfiniteScrollView } from "./ui/InfiniteScrollView";
+import { strictDeepEqual } from "./utils";
 
 export default <ItemT extends BaseItemType> () => {
   const InfiniteScrollViewWithContext: React.FC <
@@ -26,9 +26,5 @@ export default <ItemT extends BaseItemType> () => {
     );
   };
   
-  return React.memo(InfiniteScrollViewWithContext, deepEqualStrict);
+  return React.memo(InfiniteScrollViewWithContext, strictDeepEqual);
 };
-
-function deepEqualStrict(actual: any, expected: any) {
-  return deepEqual(actual, expected, { strict: true });
-}
