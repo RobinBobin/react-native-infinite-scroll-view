@@ -14,7 +14,8 @@ import {
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
-  useSharedValue
+  useSharedValue,
+  withDecay
 } from "react-native-reanimated";
 import { Page } from "./Page";
 import { ContextType } from "../types/context";
@@ -105,6 +106,11 @@ const useGestureHandler = (context: ContextType <any>) => {
   > ({
     onActive(event, context) {
       translation.value = context.initialTranslation + event[`translation${vertical ? "Y" : "X"}`];
+    },
+    onEnd(event) {
+      translation.value = withDecay({
+        velocity: event.velocityY
+      });
     },
     onStart(_, context) {
       context.initialTranslation = translation.value;
