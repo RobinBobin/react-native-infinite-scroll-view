@@ -99,7 +99,7 @@ const useContainerStyle = (
   }, [
     context.style,
     page,
-    page?.rerenderRequest
+    page?.layoutChanged
   ])
 );
 

@@ -18,16 +18,16 @@ export class PageDataHolder {
   private __layout: Readonly <LayoutRectangle>;
   private __position: PagePosition;
   
-  __rerenderRequest = 0;
+  __layoutChanged = 0;
   
   constructor() {
     this.reset();
     
     makeObservable(
       this, {
-        rerenderRequest: computed,
+        layoutChanged: computed,
         setLayout: action,
-        __rerenderRequest: observable
+        __layoutChanged: observable
       }
     );
   }
@@ -40,16 +40,16 @@ export class PageDataHolder {
     return this.__layout;
   }
   
+  get layoutChanged() {
+    return this.__layoutChanged;
+  }
+  
   get position() {
     return this.__position;
   }
   
   set position(position: PagePosition) {
     this.__position = position;
-  }
-  
-  get rerenderRequest() {
-    return this.__rerenderRequest;
   }
   
   reset() {
@@ -77,7 +77,7 @@ export class PageDataHolder {
       this.__layout = layout;
       
       if (rerender) {
-        this.__rerenderRequest ^= 1;
+        this.__layoutChanged ^= 1;
       }
     } else {
       console.log("skipping");
