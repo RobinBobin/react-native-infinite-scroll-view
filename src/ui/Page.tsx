@@ -88,6 +88,7 @@ const useContainerStyle = (
               : "black",
             flexDirection: getFlexDirection(context.style),
             position: "absolute",
+            zIndex: +(page.position === UsedPagePosition.medium),
             [vertical ? "top": "start"]: origin,
             [vertical ? "width" : "height"]: "100%"
           }
