@@ -90,7 +90,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
           UsedPagePosition.medium
         );
         
-        this.__pages[0].setData(
+        this.__pages[1].setData(
           data,
           itemsPerPage,
           data.length,
