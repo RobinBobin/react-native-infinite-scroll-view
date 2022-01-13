@@ -105,11 +105,11 @@ const useGestureHandler = (context: ContextType <any>) => {
     }
   > ({
     onActive(event, context) {
-      translation.value = context.initialTranslation + event[`translation${vertical ? "Y" : "X"}`];
+      translation.value = context.initialTranslation + (vertical ? event.translationY : event.translationX);
     },
     onEnd(event) {
       translation.value = withDecay({
-        velocity: event.velocityY
+        velocity: vertical ? event.velocityY : event.velocityX
       });
     },
     onStart(_, context) {
