@@ -11,7 +11,7 @@ import { strictDeepEqual } from "../utils";
 
 export class PageDataHolder {
   private readonly __data: ReadonlyArray <StoredItemType>;
-  private __layout: Readonly <LayoutRectangle>;
+  private __layout: PageLayout;
   private __position: PagePosition;
   
   __layoutChanged = 0;
@@ -41,7 +41,7 @@ export class PageDataHolder {
     return this.__data;
   }
   
-  get layout(): Readonly <LayoutRectangle> {
+  get layout(): PageLayout {
     return this.__layout;
   }
   
@@ -57,12 +57,12 @@ export class PageDataHolder {
     this.__position = position;
   }
   
-  setLayout(layout: LayoutRectangle, rerender: boolean) {
+  setLayout(layout: PageLayout, rerender: boolean) {
     console.log(`Page '${this.__position}' setLayout()`);
     
-    const layoutSet = !strictDeepEqual(this.__layout, layout);
+    const layoutsDiffer = !strictDeepEqual(this.__layout, layout);
     
-    if (layoutSet) {
+    if (layoutsDiffer) {
       console.log(`Current layout: ${JSON.stringify(this.__layout)}, new layout: ${JSON.stringify(layout)}, rerender: ${rerender}`);
       
       this.__layout = layout;
@@ -74,9 +74,14 @@ export class PageDataHolder {
       console.log("skipping");
     }
     
-    return layoutSet;
+    return layoutsDiffer;
   }
 };
+
+type PageLayout = Readonly <{
+  dimension: number;
+  origin: number;
+}>;
 
 interface StoredItemType {
   item: BaseItemType

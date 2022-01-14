@@ -106,42 +106,50 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
   }
   
   setPageLayout(
-    nativeEventlayout: Readonly <LayoutRectangle>,
+    nativeEventLayout: Readonly <LayoutRectangle>,
     page: PageDataHolder,
     vertical: boolean
   ) {
-    const dimensionKey = vertical ? "height" : "width";
-    const originKey = vertical ? "y" : "x";
+    const nativeEventDimension = nativeEventLayout[vertical ? "height" : "width"];
     
     console.log(`No layout yet: ${!page.layout}`);
     
     if (!page.layout) {
       page.setLayout(
         {
-          ...nativeEventlayout,
-          [originKey]: page.position === PagePosition.previous ? -nativeEventlayout[dimensionKey]
+          dimension: nativeEventDimension,
+          origin: page.position === PagePosition.previous ? -nativeEventDimension
             : page.position === PagePosition.medium ? 0
-            : this.__pageReferences.medium.layout[dimensionKey]
+            : this.__pageReferences.medium.layout.dimension
         },
         page.position !== PagePosition.medium
       );
-    } else if (page.setLayout(nativeEventlayout, false)) {
-      const keys = Object.values(PagePosition);
-      
-      for (
-        let i = keys.indexOf(page.position) + 1;
-        i < keys.length;
-        ++i
-      ) {
-        const layout = this.__pageReferences[keys[i - 1]].layout;
-        const thisPage = this.__pageReferences[keys[i]];
+    } else {
+      if (page.setLayout(
+        {
+          dimension: nativeEventDimension,
+          origin: nativeEventLayout[vertical ? "y" : "x"]
+        },
+        false
+      )) {
+        const keys = Object.values(PagePosition);
         
-        const newLayout = {
-          ...thisPage.layout,
-          [originKey]: layout[originKey] + layout[dimensionKey]
+        for (
+          let i = keys.indexOf(page.position) + 1;
+          i < keys.length;
+          ++i
+        ) {
+          const layout = this.__pageReferences[keys[i - 1]].layout;
+          const thisPage = this.__pageReferences[keys[i]];
+          
+          thisPage.setLayout(
+            {
+              ...thisPage.layout,
+              origin: layout.origin + layout.dimension
+            },
+            true
+          );
         }
-        
-        thisPage.setLayout(newLayout, true);
       }
     }
   }

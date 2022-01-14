@@ -76,7 +76,6 @@ const useContainerStyle = (
     
     if (page) {
       const vertical = isVertical(context.style);
-      const origin = page.layout ? page.layout[vertical ? "y" : "x"] : undefined;
       
       return [
         StyleSheet.create({
@@ -89,7 +88,7 @@ const useContainerStyle = (
             flexDirection: getFlexDirection(context.style),
             position: "absolute",
             zIndex: +(page.position === PagePosition.medium),
-            [vertical ? "top": "start"]: origin,
+            [vertical ? "top": "start"]: page.layout?.origin,
             [vertical ? "width" : "height"]: "100%"
           }
         }).container,
