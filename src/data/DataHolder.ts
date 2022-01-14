@@ -6,12 +6,13 @@ import {
 } from "mobx";
 import { useMemo } from "react";
 import { LayoutRectangle } from "react-native";
+import {
+  SharedValue,
+  useSharedValue
+} from "react-native-reanimated";
 import { PageDataHolder } from "./PageDataHolder";
 import { BaseItemType } from "../types/data";
-import {
-  UsedPagePosition,
-  UnusedPagePosition
-} from "../types/ui/page/Position";
+import { PagePosition } from "../types/ui/page/Position";
 
 export interface DataHolder <ItemT extends BaseItemType> {
   setData(
@@ -24,11 +25,8 @@ export interface DataHolder <ItemT extends BaseItemType> {
 };
 
 export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <ItemT> {
-  private readonly __pages: ReadonlyArray <PageDataHolder> = [
-    new PageDataHolder(),
-    new PageDataHolder(),
-    new PageDataHolder()
-  ];
+  private __pages: ReadonlyArray <PageDataHolder>;
+  private __translation: SharedValue <number>;
   
   __pageReferences: Readonly <PageReferences> = {};
   
@@ -53,63 +51,67 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
       itemsPerPage = 50
     }
   ) {
-    const maxLength = this.__pages.length * itemsPerPage;
+    const maxLength = 3 * itemsPerPage;
     
     if (data.length > maxLength) {
       throw new RangeError(`Dataset size (${data.length}) can't exceed ${maxLength}`);
     }
     
-    this.__pages.forEach(page => page.reset());
-    
     const itemsPerPage2x = itemsPerPage * 2;
     
     if (data.length > itemsPerPage2x) {
-      this.__pages[0].setData(data, 0, itemsPerPage, UsedPagePosition.previous);
-      this.__pages[1].setData(data, itemsPerPage, itemsPerPage2x, UsedPagePosition.medium);
-      this.__pages[2].setData(data, itemsPerPage2x, itemsPerPage * 3, UsedPagePosition.next);
+      this.__pages = [
+        new PageDataHolder(data, 0, itemsPerPage, PagePosition.previous),
+        new PageDataHolder(data, itemsPerPage, itemsPerPage2x, PagePosition.medium),
+        new PageDataHolder(data, itemsPerPage2x, itemsPerPage * 3, PagePosition.next)
+      ];
     } else if (data.length > itemsPerPage) {
       if (initiallyScrollToEnd) {
-        this.__pages[0].setData(
-          data,
-          data.length - itemsPerPage,
-          data.length,
-          UsedPagePosition.medium
-        );
-        
-        this.__pages[1].setData(
-          data,
-          0,
-          data.length - itemsPerPage,
-          UsedPagePosition.previous
-        );
+        this.__pages = [
+          new PageDataHolder(
+            data,
+            0,
+            data.length - itemsPerPage,
+            PagePosition.previous
+          ),
+          new PageDataHolder(
+            data,
+            data.length - itemsPerPage,
+            data.length,
+            PagePosition.medium
+          )
+        ];
       } else {
-        this.__pages[0].setData(
-          data,
-          0,
-          itemsPerPage,
-          UsedPagePosition.medium
-        );
-        
-        this.__pages[1].setData(
-          data,
-          itemsPerPage,
-          data.length,
-          UsedPagePosition.next
-        );
+        this.__pages = [
+          new PageDataHolder(
+            data,
+            0,
+            itemsPerPage,
+            PagePosition.medium
+          ),
+          new PageDataHolder(
+            data,
+            itemsPerPage,
+            data.length,
+            PagePosition.next
+          )
+        ];
       }
     } else if (data.length) {
-      this.__pages[0].setData(data, 0, data.length, UsedPagePosition.medium);
+      this.__pages = [new PageDataHolder(data, 0, data.length, PagePosition.medium)];
     }
     
     const pageReferences: PageReferences = {};
     
     this.__pages.forEach(page => {
-      if (page.position !== UnusedPagePosition.unused) {
-        pageReferences[page.position] = page;
-      }
+      pageReferences[page.position] = page;
     });
     
     this.__pageReferences = pageReferences;
+    
+    if (this.__translation) {
+      this.__translation.value = 0;
+    }
   }
   
   setPageLayout(
@@ -120,21 +122,23 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
     const dimensionKey = vertical ? "height" : "width";
     const originKey = vertical ? "y" : "x";
     
+    console.log(`No layout yet: ${!page.layout}`);
+    
     if (!page.layout) {
       page.setLayout(
         {
           ...nativeEventlayout,
-          [originKey]: page.position === UsedPagePosition.previous ? -nativeEventlayout[dimensionKey]
-            : page.position === UsedPagePosition.medium ? 0
+          [originKey]: page.position === PagePosition.previous ? -nativeEventlayout[dimensionKey]
+            : page.position === PagePosition.medium ? 0
             : this.__pageReferences.medium.layout[dimensionKey]
         },
-        page.position !== UsedPagePosition.medium
+        page.position !== PagePosition.medium
       );
     } else if (page.setLayout(nativeEventlayout, false)) {
-      const keys = Object.values(UsedPagePosition);
+      const keys = Object.values(PagePosition);
       
       for (
-        let i = keys.indexOf(page.position as UsedPagePosition) + 1;
+        let i = keys.indexOf(page.position) + 1;
         i < keys.length;
         ++i
       ) {
@@ -150,6 +154,12 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
       }
     }
   }
+  
+  useTranslation() {
+    this.__translation = useSharedValue(0);
+    
+    return this.__translation;
+  }
 };
 
 export function useDataHolder <ItemT extends BaseItemType> (): DataHolder <ItemT> {
@@ -157,5 +167,5 @@ export function useDataHolder <ItemT extends BaseItemType> (): DataHolder <ItemT
 };
 
 type PageReferences = {
-  [key in UsedPagePosition]?: PageDataHolder
+  [key in PagePosition]?: PageDataHolder
 };

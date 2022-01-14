@@ -14,7 +14,6 @@ import {
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
-  useSharedValue,
   withDecay
 } from "react-native-reanimated";
 import { Page } from "./Page";
@@ -83,7 +82,8 @@ const styles = StyleSheet.create({
 });
 
 const useGestureHandler = (context: ContextType <any>) => {
-  const translation = useSharedValue(0);
+  const translation = context.dataHolder.useTranslation();
+  
   const vertical = isVertical(context.style);
   
   const pageAnimatedStyle = useAnimatedStyle(() => {

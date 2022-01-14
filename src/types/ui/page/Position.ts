@@ -1,11 +1,5 @@
-export enum UnusedPagePosition {
-  unused = "unused"
-};
-
-export enum UsedPagePosition {
+export enum PagePosition {
   previous = "previous",
   medium = "medium",
   next = "next"
 };
-
-export type PagePosition = UnusedPagePosition | UsedPagePosition;

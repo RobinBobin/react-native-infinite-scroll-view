@@ -6,22 +6,27 @@ import {
 } from "mobx";
 import { LayoutRectangle } from "react-native";
 import { BaseItemType } from "../types/data";
-import {
-  PagePosition,
-  UnusedPagePosition,
-  UsedPagePosition
-} from "../types/ui/page/Position";
+import { PagePosition } from "../types/ui/page/Position";
 import { strictDeepEqual } from "../utils";
 
 export class PageDataHolder {
-  private __data: ReadonlyArray <StoredItemType>;
+  private readonly __data: ReadonlyArray <StoredItemType>;
   private __layout: Readonly <LayoutRectangle>;
   private __position: PagePosition;
   
   __layoutChanged = 0;
   
-  constructor() {
-    this.reset();
+  constructor(
+    data: Array <BaseItemType>,
+    begin: number,
+    end: number,
+    position: PagePosition
+  ) {
+    this.__data = data.slice(begin, end).map(item => ({
+      item
+    }));
+    
+    this.position = position;
     
     makeObservable(
       this, {
@@ -50,20 +55,6 @@ export class PageDataHolder {
   
   set position(position: PagePosition) {
     this.__position = position;
-  }
-  
-  reset() {
-    this.__data = [];
-    this.__layout = null;
-    this.__position = UnusedPagePosition.unused;
-  }
-  
-  setData(data: Array <BaseItemType>, begin: number, end: number, position: UsedPagePosition) {
-    this.__data = data.slice(begin, end).map(item => ({
-      item
-    }));
-    
-    this.position = position;
   }
   
   setLayout(layout: LayoutRectangle, rerender: boolean) {

@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { PageDataHolder } from "../data/PageDataHolder";
 import { ContextType } from "../types/context";
-import { UsedPagePosition } from "../types/ui/page/Position";
+import { PagePosition } from "../types/ui/page/Position";
 import { strictDeepEqual } from "../utils";
 import {
   getFlexDirection,
@@ -82,13 +82,13 @@ const useContainerStyle = (
         StyleSheet.create({
           container: {
             backgroundColor:
-              page.position === UsedPagePosition.previous ? "pink"
-              : page.position === UsedPagePosition.medium ? "lightgreen"
-              : page.position === UsedPagePosition.next ? "lightblue"
+              page.position === PagePosition.previous ? "pink"
+              : page.position === PagePosition.medium ? "lightgreen"
+              : page.position === PagePosition.next ? "lightblue"
               : "black",
             flexDirection: getFlexDirection(context.style),
             position: "absolute",
-            zIndex: +(page.position === UsedPagePosition.medium),
+            zIndex: +(page.position === PagePosition.medium),
             [vertical ? "top": "start"]: origin,
             [vertical ? "width" : "height"]: "100%"
           }
