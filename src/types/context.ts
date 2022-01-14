@@ -4,10 +4,8 @@ import {
 } from "react-native";
 import { BaseItemType } from "./data";
 import { RenderItem } from "./ui";
-import {
-  DataHolder,
-  DataHolderImpl
-} from "../data/DataHolder";
+import { DataHolder } from "../data/DataHolder";
+import { DataHolderImpl } from "../data/DataHolderImpl";
 
 export interface ContextType
   <
