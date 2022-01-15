@@ -34,7 +34,7 @@ let InfiniteScrollView: React.FC = () => {
     pageAnimatedStyle
   } = useGestureHandler(context);
   
-  const { previous, medium, next } = context.dataHolder.pageReferences;
+  const { previous, middle, next } = context.dataHolder.pageReferences;
   
   return (
     <GestureHandlerRootView
@@ -53,7 +53,7 @@ let InfiniteScrollView: React.FC = () => {
             pageAnimatedStyle={pageAnimatedStyle}
           />
           <Page
-            page={medium}
+            page={middle}
             pageAnimatedStyle={pageAnimatedStyle}
           />
           <Page

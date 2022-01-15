@@ -1,5 +1,5 @@
 export enum PagePosition {
   previous = "previous",
-  medium = "medium",
+  middle = "middle",
   next = "next"
 };

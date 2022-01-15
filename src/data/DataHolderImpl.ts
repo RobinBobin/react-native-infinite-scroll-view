@@ -53,7 +53,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
     if (data.length > itemsPerPage2x) {
       this.__pages = [
         new PageDataHolder(data, 0, itemsPerPage, PagePosition.previous),
-        new PageDataHolder(data, itemsPerPage, itemsPerPage2x, PagePosition.medium),
+        new PageDataHolder(data, itemsPerPage, itemsPerPage2x, PagePosition.middle),
         new PageDataHolder(data, itemsPerPage2x, itemsPerPage * 3, PagePosition.next)
       ];
     } else if (data.length > itemsPerPage) {
@@ -69,7 +69,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
             data,
             data.length - itemsPerPage,
             data.length,
-            PagePosition.medium
+            PagePosition.middle
           )
         ];
       } else {
@@ -78,7 +78,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
             data,
             0,
             itemsPerPage,
-            PagePosition.medium
+            PagePosition.middle
           ),
           new PageDataHolder(
             data,
@@ -89,7 +89,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
         ];
       }
     } else if (data.length) {
-      this.__pages = [new PageDataHolder(data, 0, data.length, PagePosition.medium)];
+      this.__pages = [new PageDataHolder(data, 0, data.length, PagePosition.middle)];
     }
     
     const pageReferences: PageReferences = {};
@@ -119,10 +119,10 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
         {
           dimension: nativeEventDimension,
           origin: page.position === PagePosition.previous ? -nativeEventDimension
-            : page.position === PagePosition.medium ? 0
-            : this.__pageReferences.medium.layout.dimension
+            : page.position === PagePosition.middle ? 0
+            : this.__pageReferences.middle.layout.dimension
         },
-        page.position !== PagePosition.medium
+        page.position !== PagePosition.middle
       );
     } else {
       if (page.setLayout(

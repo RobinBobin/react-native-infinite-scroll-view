@@ -82,12 +82,12 @@ const useContainerStyle = (
           container: {
             backgroundColor:
               page.position === PagePosition.previous ? "pink"
-              : page.position === PagePosition.medium ? "lightgreen"
+              : page.position === PagePosition.middle ? "lightgreen"
               : page.position === PagePosition.next ? "lightblue"
               : "black",
             flexDirection: getFlexDirection(context.style),
             position: "absolute",
-            zIndex: +(page.position === PagePosition.medium),
+            zIndex: +(page.position === PagePosition.middle),
             [vertical ? "top": "start"]: page.layout?.origin,
             [vertical ? "width" : "height"]: "100%"
           }
