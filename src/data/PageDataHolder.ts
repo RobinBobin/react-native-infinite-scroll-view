@@ -4,49 +4,43 @@ import {
   makeObservable,
   observable
 } from "mobx";
-import { LayoutRectangle } from "react-native";
 import { BaseItemType } from "../types/data";
-import { PagePosition } from "../types/ui/page/Position";
+import { PagePosition } from "../types/ui/page";
 import { strictDeepEqual } from "../utils";
 
 export class PageDataHolder {
-  private readonly __data: ReadonlyArray <StoredItemType>;
-  private __layout: PageLayout;
-  private __position: PagePosition;
+  __data: Array <StoredItemType>;
+  __layout: PageLayout;
+  __position: PagePosition;
   
-  __layoutChanged = 0;
-  
-  constructor(
-    data: Array <BaseItemType>,
-    begin: number,
-    end: number,
-    position: PagePosition
-  ) {
-    this.__data = data.slice(begin, end).map(item => ({
-      item
-    }));
-    
-    this.position = position;
+  constructor() {
+    this.reset();
     
     makeObservable(
       this, {
-        layoutChanged: computed,
+        data: computed,
+        layout: computed,
+        position: computed,
+        reset: action,
+        setData: action,
         setLayout: action,
-        __layoutChanged: observable
+        __data: observable,
+        __layout: observable,
+        __position: observable,
       }
     );
   }
   
-  get data() {
+  get data(): ReadonlyArray <StoredItemType> {
     return this.__data;
   }
   
-  get layout(): PageLayout {
-    return this.__layout;
+  get hasLayout() {
+    return !!this.layout.dimension;
   }
   
-  get layoutChanged() {
-    return this.__layoutChanged;
+  get layout(): Readonly <PageLayout> {
+    return this.__layout;
   }
   
   get position() {
@@ -57,31 +51,59 @@ export class PageDataHolder {
     this.__position = position;
   }
   
+  reset() {
+    this.__data = [];
+    
+    this.__layout = {
+      dimension: 0,
+      origin: 0
+    };
+    
+    this.__position = null;
+  }
+  
+  setData(
+    data: ReadonlyArray <BaseItemType>,
+    position: PagePosition,
+    begin?: number,
+    end?: number
+  ) {
+    if (arguments.length !== 2 && arguments.length !== 4) {
+      throw new Error("Only 2 or 4 parameters can be supplied");
+    }
+    
+    this.__data = (arguments.length === 2 ? data : data.slice(begin, end)).map(item => ({
+      item
+    }));
+    
+    this.position = position;
+  }
+  
   setLayout(debugLogsEnabled: boolean, layout: PageLayout, rerender: boolean) {
-    debugLogsEnabled && console.log(`Page '${this.__position}' setLayout()`);
+    debugLogsEnabled && console.log(`Page '${this.position}' setLayout()`);
     
-    const layoutsDiffer = !strictDeepEqual(this.__layout, layout);
+    const layoutsDiffer = !strictDeepEqual(this.layout, layout);
     
-    if (layoutsDiffer) {
-      debugLogsEnabled && console.log(`Current layout: ${JSON.stringify(this.__layout)}, new layout: ${JSON.stringify(layout)}, rerender: ${rerender}`);
-      
-      this.__layout = layout;
+    if (!layoutsDiffer) {
+      debugLogsEnabled && console.log("skipping");
+    } else {
+      debugLogsEnabled && console.log(`Current layout: ${JSON.stringify(this.layout)}, new layout: ${JSON.stringify(layout)}, rerender: ${rerender}`);
       
       if (rerender) {
-        this.__layoutChanged ^= 1;
+        this.__layout = layout;
+      } else {
+        Object.keys(layout).forEach(key => this.__layout[key] = layout[key]);
       }
-    } else {
-      debugLogsEnabled && console.log("skipping");
     }
     
     return layoutsDiffer;
   }
 };
 
-type PageLayout = Readonly <{
+interface PageLayout {
   dimension: number;
   origin: number;
-}>;
+};
 
 interface StoredItemType {
   item: BaseItemType

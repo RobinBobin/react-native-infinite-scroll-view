@@ -1,4 +1,3 @@
-import { observer } from "mobx-react-lite";
 import React, {
   useCallback
 } from "react";
@@ -16,7 +15,6 @@ import Animated, {
   useAnimatedStyle,
   withDecay
 } from "react-native-reanimated";
-import { Page } from "./Page";
 import { ContextType } from "../types/context";
 import {
   isVertical,
@@ -34,8 +32,6 @@ let InfiniteScrollView: React.FC = () => {
     pageAnimatedStyle
   } = useGestureHandler(context);
   
-  const { previous, middle, next } = context.dataHolder.pageReferences;
-  
   return (
     <GestureHandlerRootView
       onLayout={useOnLayout()}
@@ -48,18 +44,7 @@ let InfiniteScrollView: React.FC = () => {
         <Animated.View
           style={styles.pageContainer}
         >
-          <Page
-            page={previous}
-            pageAnimatedStyle={pageAnimatedStyle}
-          />
-          <Page
-            page={middle}
-            pageAnimatedStyle={pageAnimatedStyle}
-          />
-          <Page
-            page={next}
-            pageAnimatedStyle={pageAnimatedStyle}
-          />
+          {context.dataHolder.usePages(pageAnimatedStyle)}
         </Animated.View>
       </PanGestureHandler>
     </GestureHandlerRootView>
@@ -70,7 +55,7 @@ InfiniteScrollView.whyDidYouRender = {
   customName: "InfiniteScrollView"
 };
 
-InfiniteScrollView = React.memo(observer(InfiniteScrollView));
+InfiniteScrollView = React.memo(InfiniteScrollView);
 
 export { InfiniteScrollView };
 

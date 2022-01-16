@@ -1,10 +1,6 @@
-import {
-  action,
-  computed,
-  makeObservable,
-  observable
-} from "mobx";
-import { useMemo } from "react";
+import React, {
+  useMemo
+} from "react";
 import { LayoutRectangle } from "react-native";
 import {
   SharedValue,
@@ -13,35 +9,24 @@ import {
 import { DataHolder } from "./DataHolder";
 import { PageDataHolder } from "./PageDataHolder";
 import { BaseItemType } from "../types/data";
-import { PagePosition } from "../types/ui/page/Position";
+import {
+  PageAnimatedStyle,
+  PagePosition
+} from "../types/ui/page";
+import { Page } from "../ui/Page";
 
 export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <ItemT> {
-  private __pages: ReadonlyArray <PageDataHolder>;
+  private readonly __pages: ReadonlyArray <PageDataHolder> = Array.from(Array(3)).map(() => new PageDataHolder());
+  
   private __translation: SharedValue <number>;
   
-  __pageReferences: Readonly <PageReferences> = {};
-  
-  constructor() {
-    makeObservable(
-      this, {
-        pageReferences: computed,
-        setData: action,
-        __pageReferences: observable
-      }
-    );
-  }
-  
-  get pageReferences(): Readonly <PageReferences> {
-    return this.__pageReferences;
-  }
-  
   setData(
-    data: Array <ItemT>,
+    data: ReadonlyArray <ItemT>,
     {
       initiallyScrollToEnd = false,
       itemsPerPage = 50
     } = {}
-  ) {
+  ): void {
     const maxLength = 3 * itemsPerPage;
     
     if (data.length > maxLength) {
@@ -50,57 +35,23 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
     
     const itemsPerPage2x = itemsPerPage * 2;
     
+    this.__pages.forEach(page => page.reset());
+    
     if (data.length > itemsPerPage2x) {
-      this.__pages = [
-        new PageDataHolder(data, 0, itemsPerPage, PagePosition.previous),
-        new PageDataHolder(data, itemsPerPage, itemsPerPage2x, PagePosition.middle),
-        new PageDataHolder(data, itemsPerPage2x, itemsPerPage * 3, PagePosition.next)
-      ];
+      this.__pages[0].setData(data, PagePosition.previous, 0, itemsPerPage);
+      this.__pages[1].setData(data, PagePosition.middle, itemsPerPage, itemsPerPage2x);
+      this.__pages[2].setData(data, PagePosition.next, itemsPerPage2x, itemsPerPage * 3);
     } else if (data.length > itemsPerPage) {
       if (initiallyScrollToEnd) {
-        this.__pages = [
-          new PageDataHolder(
-            data,
-            0,
-            data.length - itemsPerPage,
-            PagePosition.previous
-          ),
-          new PageDataHolder(
-            data,
-            data.length - itemsPerPage,
-            data.length,
-            PagePosition.middle
-          )
-        ];
+        this.__pages[0].setData(data, PagePosition.previous, 0, data.length - itemsPerPage);
+        this.__pages[1].setData(data, PagePosition.middle, data.length - itemsPerPage, data.length);
       } else {
-        this.__pages = [
-          new PageDataHolder(
-            data,
-            0,
-            itemsPerPage,
-            PagePosition.middle
-          ),
-          new PageDataHolder(
-            data,
-            itemsPerPage,
-            data.length,
-            PagePosition.next
-          )
-        ];
+        this.__pages[0].setData(data, PagePosition.middle, 0, itemsPerPage);
+        this.__pages[1].setData(data, PagePosition.next, itemsPerPage, data.length);
       }
     } else if (data.length) {
-      this.__pages = [new PageDataHolder(data, 0, data.length, PagePosition.middle)];
-    } else {
-      this.__pages = [];
+      this.__pages[0].setData(data, PagePosition.middle);
     }
-    
-    const pageReferences: PageReferences = {};
-    
-    this.__pages.forEach(page => {
-      pageReferences[page.position] = page;
-    });
-    
-    this.__pageReferences = pageReferences;
     
     if (this.__translation) {
       this.__translation.value = 0;
@@ -115,16 +66,16 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
   ) {
     const nativeEventDimension = nativeEventLayout[vertical ? "height" : "width"];
     
-    debugLogsEnabled && console.log(`No layout yet: ${!page.layout}`);
+    debugLogsEnabled && console.log(`No layout yet: ${!page.hasLayout}`);
     
-    if (!page.layout) {
+    if (!page.hasLayout) {
       page.setLayout(
         debugLogsEnabled,
         {
           dimension: nativeEventDimension,
           origin: page.position === PagePosition.previous ? -nativeEventDimension
             : page.position === PagePosition.middle ? 0
-            : this.__pageReferences.middle.layout.dimension
+            : this.__getPage(PagePosition.middle).layout.dimension
         },
         page.position !== PagePosition.middle
       );
@@ -144,8 +95,8 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
           i < keys.length;
           ++i
         ) {
-          const layout = this.__pageReferences[keys[i - 1]].layout;
-          const thisPage = this.__pageReferences[keys[i]];
+          const layout = this.__getPage(keys[i - 1]).layout;
+          const thisPage = this.__getPage(keys[i]);
           
           thisPage.setLayout(
             debugLogsEnabled,
@@ -160,17 +111,27 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
     }
   }
   
+  usePages(pageAnimatedStyle: PageAnimatedStyle) {
+    return useMemo(() => this.__pages.map((page, index) => (
+      <Page
+        key={index}
+        page={page}
+        pageAnimatedStyle={pageAnimatedStyle}
+      />
+    )), [pageAnimatedStyle]);
+  }
+  
   useTranslation() {
     this.__translation = useSharedValue(0);
     
     return this.__translation;
   }
+  
+  __getPage(position: PagePosition) {
+    return this.__pages.find(page => page.position === position);
+  }
 };
 
 export function useDataHolder <ItemT extends BaseItemType> (): DataHolder <ItemT> {
   return useMemo(() => new DataHolderImpl <ItemT> (), []);
-};
-
-type PageReferences = {
-  [key in PagePosition]?: PageDataHolder
 };

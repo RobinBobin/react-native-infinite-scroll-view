@@ -4,19 +4,17 @@ import React, {
   useMemo
 } from "react";
 import {
-  ImageStyle,
   LayoutChangeEvent,
   StyleSheet,
-  TextStyle,
-  View,
-  ViewStyle
+  View
 } from "react-native";
-import Animated, {
-  AnimatedStyleProp
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { PageDataHolder } from "../data/PageDataHolder";
 import { ContextType } from "../types/context";
-import { PagePosition } from "../types/ui/page/Position";
+import {
+  PageAnimatedStyle,
+  PagePosition
+} from "../types/ui/page";
 import { strictDeepEqual } from "../utils";
 import {
   getFlexDirection,
@@ -32,7 +30,7 @@ let Page: React.FC <PageProps> = ({page, pageAnimatedStyle}) => {
   const onLayout = useOnLayout(context, page);
   
   if (context.debugLogsEnabled) {
-    if (page) {
+    if (page.position) {
       console.log(`render page '${page.position}', item count: ${page.data.length}`);
     } else {
       console.log("render page '<no position>'");
@@ -40,7 +38,7 @@ let Page: React.FC <PageProps> = ({page, pageAnimatedStyle}) => {
   }
   
   return (
-    !page
+    !page.position
     ?
       null
     :
@@ -61,8 +59,6 @@ Page = React.memo(observer(Page), strictDeepEqual);
 
 export { Page };
 
-type PageAnimatedStyle = AnimatedStyleProp <ViewStyle | ImageStyle | TextStyle>;
-
 interface PageProps {
   page: PageDataHolder;
   pageAnimatedStyle: PageAnimatedStyle;
@@ -74,9 +70,9 @@ const useContainerStyle = (
   pageAnimatedStyle: PageAnimatedStyle
 ) => (
   useMemo(() => {
-    context.debugLogsEnabled && console.log(`Page '${page?.position ?? "<no position>"}' useContainerStyle()`);
+    context.debugLogsEnabled && console.log(`Page '${page.position || "<no position>"}' useContainerStyle()`);
     
-    if (page) {
+    if (page.position) {
       const vertical = isVertical(context.style);
       
       return [
@@ -90,7 +86,7 @@ const useContainerStyle = (
             flexDirection: getFlexDirection(context.style),
             position: "absolute",
             zIndex: +(page.position === PagePosition.middle),
-            [vertical ? "top": "start"]: page.layout?.origin,
+            [vertical ? "top": "start"]: page.layout.origin,
             [vertical ? "width" : "height"]: "100%"
           }
         }).container,
@@ -100,16 +96,16 @@ const useContainerStyle = (
   }, [
     context.debugLogsEnabled,
     context.style,
-    page,
-    page?.layoutChanged
+    page.position,
+    page.layout
   ])
 );
 
 const useItems = (context: ContextType <any>, page: PageDataHolder) => (
   useMemo(() => {
-    context.debugLogsEnabled && console.log(`Page '${page?.position ?? "<no position>"}' useItems()`);
+    context.debugLogsEnabled && console.log(`Page '${page.position || "<no position>"}' useItems()`);
     
-    return page?.data.map((item, index) => (
+    return page.data.map((item, index) => (
       <View
         key={index}
       >
@@ -123,7 +119,7 @@ const useItems = (context: ContextType <any>, page: PageDataHolder) => (
   }, [
     context.debugLogsEnabled,
     context.renderItem,
-    page
+    page.data
   ])
 );
 
@@ -144,6 +140,6 @@ const useOnLayout = (
     context.dataHolder,
     context.debugLogsEnabled,
     context.style,
-    page
+    page.position
   ])
 );

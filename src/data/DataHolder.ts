@@ -1,7 +1,7 @@
 import { BaseItemType } from "../types/data";
 
 export interface DataHolder <ItemT extends BaseItemType> {
-  setData(data: Array <ItemT>, options?: SetDataOptions): void
+  setData(data: ReadonlyArray <ItemT>, options?: SetDataOptions): void;
 };
 
 interface SetDataOptions {
