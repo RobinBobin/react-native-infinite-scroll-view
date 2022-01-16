@@ -40,7 +40,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
     {
       initiallyScrollToEnd = false,
       itemsPerPage = 50
-    }
+    } = {}
   ) {
     const maxLength = 3 * itemsPerPage;
     
@@ -90,6 +90,8 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
       }
     } else if (data.length) {
       this.__pages = [new PageDataHolder(data, 0, data.length, PagePosition.middle)];
+    } else {
+      this.__pages = [];
     }
     
     const pageReferences: PageReferences = {};
@@ -106,16 +108,18 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
   }
   
   setPageLayout(
+    debugLogsEnabled: boolean,
     nativeEventLayout: Readonly <LayoutRectangle>,
     page: PageDataHolder,
     vertical: boolean
   ) {
     const nativeEventDimension = nativeEventLayout[vertical ? "height" : "width"];
     
-    console.log(`No layout yet: ${!page.layout}`);
+    debugLogsEnabled && console.log(`No layout yet: ${!page.layout}`);
     
     if (!page.layout) {
       page.setLayout(
+        debugLogsEnabled,
         {
           dimension: nativeEventDimension,
           origin: page.position === PagePosition.previous ? -nativeEventDimension
@@ -126,6 +130,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
       );
     } else {
       if (page.setLayout(
+        debugLogsEnabled,
         {
           dimension: nativeEventDimension,
           origin: nativeEventLayout[vertical ? "y" : "x"]
@@ -143,6 +148,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
           const thisPage = this.__pageReferences[keys[i]];
           
           thisPage.setLayout(
+            debugLogsEnabled,
             {
               ...thisPage.layout,
               origin: layout.origin + layout.dimension

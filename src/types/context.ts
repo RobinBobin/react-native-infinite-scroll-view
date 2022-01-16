@@ -14,6 +14,7 @@ export interface ContextType
   >
 {
   dataHolder: DataHolderT;
+  debugLogsEnabled?: boolean;
   renderItem: RenderItem <ItemT>;
   style: StyleProp <ViewStyle>;
 };

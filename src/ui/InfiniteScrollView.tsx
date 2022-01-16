@@ -25,9 +25,9 @@ import {
 import "../../wdyr";
 
 let InfiniteScrollView: React.FC = () => {
-  console.log("render InfiniteScrollView");
-  
   const context = useContext();
+  
+  context.debugLogsEnabled && console.log("render InfiniteScrollView");
   
   const {
     gestureHandler,

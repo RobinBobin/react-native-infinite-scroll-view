@@ -57,13 +57,13 @@ export class PageDataHolder {
     this.__position = position;
   }
   
-  setLayout(layout: PageLayout, rerender: boolean) {
-    console.log(`Page '${this.__position}' setLayout()`);
+  setLayout(debugLogsEnabled: boolean, layout: PageLayout, rerender: boolean) {
+    debugLogsEnabled && console.log(`Page '${this.__position}' setLayout()`);
     
     const layoutsDiffer = !strictDeepEqual(this.__layout, layout);
     
     if (layoutsDiffer) {
-      console.log(`Current layout: ${JSON.stringify(this.__layout)}, new layout: ${JSON.stringify(layout)}, rerender: ${rerender}`);
+      debugLogsEnabled && console.log(`Current layout: ${JSON.stringify(this.__layout)}, new layout: ${JSON.stringify(layout)}, rerender: ${rerender}`);
       
       this.__layout = layout;
       
@@ -71,7 +71,7 @@ export class PageDataHolder {
         this.__layoutChanged ^= 1;
       }
     } else {
-      console.log("skipping");
+      debugLogsEnabled && console.log("skipping");
     }
     
     return layoutsDiffer;

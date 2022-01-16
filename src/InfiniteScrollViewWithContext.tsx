@@ -10,9 +10,9 @@ import { strictDeepEqual } from "./utils";
 export default <ItemT extends BaseItemType> () => {
   const InfiniteScrollViewWithContext: React.FC <
     ContextType <ItemT, DataHolder <ItemT>>
-  > = (props) =>
+  > = props =>
   {
-    console.log("render InfiniteScrollViewWithContext");
+    props.debugLogsEnabled && console.log("render InfiniteScrollViewWithContext");
     
     return (
       <Context.Provider

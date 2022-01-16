@@ -31,10 +31,12 @@ let Page: React.FC <PageProps> = ({page, pageAnimatedStyle}) => {
   const items = useItems(context, page);
   const onLayout = useOnLayout(context, page);
   
-  if (page) {
-    console.log(`render page '${page.position}', item count: ${page.data.length}`);
-  } else {
-    console.log("render page '<no position>'");
+  if (context.debugLogsEnabled) {
+    if (page) {
+      console.log(`render page '${page.position}', item count: ${page.data.length}`);
+    } else {
+      console.log("render page '<no position>'");
+    }
   }
   
   return (
@@ -72,7 +74,7 @@ const useContainerStyle = (
   pageAnimatedStyle: PageAnimatedStyle
 ) => (
   useMemo(() => {
-    console.log(`Page '${page?.position ?? "<no position>"}' useContainerStyle()`);
+    context.debugLogsEnabled && console.log(`Page '${page?.position ?? "<no position>"}' useContainerStyle()`);
     
     if (page) {
       const vertical = isVertical(context.style);
@@ -96,6 +98,7 @@ const useContainerStyle = (
       ];
     }
   }, [
+    context.debugLogsEnabled,
     context.style,
     page,
     page?.layoutChanged
@@ -104,7 +107,7 @@ const useContainerStyle = (
 
 const useItems = (context: ContextType <any>, page: PageDataHolder) => (
   useMemo(() => {
-    console.log(`Page '${page?.position ?? "<no position>"}' useItems()`);
+    context.debugLogsEnabled && console.log(`Page '${page?.position ?? "<no position>"}' useItems()`);
     
     return page?.data.map((item, index) => (
       <View
@@ -118,6 +121,7 @@ const useItems = (context: ContextType <any>, page: PageDataHolder) => (
       </View>
     ));
   }, [
+    context.debugLogsEnabled,
     context.renderItem,
     page
   ])
@@ -128,12 +132,18 @@ const useOnLayout = (
   page: PageDataHolder
 ) => (
   useCallback(({nativeEvent}: LayoutChangeEvent) => {
-    console.log(`Page '${page.position}' onLayout()`);
+    context.debugLogsEnabled && console.log(`Page '${page.position}' onLayout()`);
     
-    context.dataHolder.setPageLayout(nativeEvent.layout, page, isVertical(context.style));
+    context.dataHolder.setPageLayout(
+      context.debugLogsEnabled,
+      nativeEvent.layout,
+      page,
+      isVertical(context.style)
+    );
   }, [
-    context.style,
     context.dataHolder,
+    context.debugLogsEnabled,
+    context.style,
     page
   ])
 );
