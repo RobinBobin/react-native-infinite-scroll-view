@@ -1,4 +1,5 @@
 import React, {
+  DependencyList,
   useMemo
 } from "react";
 import { LayoutRectangle } from "react-native";
@@ -16,38 +17,51 @@ import {
 import { Page } from "../ui/Page";
 
 export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <ItemT> {
+  private __initiallyScrollToEnd = false;
+  private __itemsPerPage = 10;
+  
   private readonly __pages: ReadonlyArray <PageDataHolder> = Array.from(Array(3)).map(() => new PageDataHolder());
   
   private __translation: SharedValue <number>;
   
-  setData(
-    data: ReadonlyArray <ItemT>,
-    {
-      initiallyScrollToEnd = false,
-      itemsPerPage = 50
-    } = {}
-  ): void {
-    const maxLength = this.__pages.length * itemsPerPage;
+  get initiallyScrollToEnd() {
+    return this.__initiallyScrollToEnd;
+  }
+  
+  set initiallyScrollToEnd(initiallyScrollToEnd) {
+    this.__initiallyScrollToEnd = initiallyScrollToEnd;
+  }
+  
+  get itemsPerPage() {
+    return this.__itemsPerPage;
+  }
+  
+  set itemsPerPage(itemsPerPage) {
+    this.__itemsPerPage = itemsPerPage;
+  }
+  
+  setData(data: ReadonlyArray <ItemT>): void {
+    const maxLength = this.__pages.length * this.itemsPerPage;
     
     if (data.length > maxLength) {
       throw new RangeError(`Dataset size (${data.length}) can't exceed ${maxLength}`);
     }
     
-    const itemsPerPage2x = itemsPerPage * 2;
+    const itemsPerPage2x = this.itemsPerPage * 2;
     
     this.__pages.forEach(page => page.reset());
     
     if (data.length > itemsPerPage2x) {
-      this.__pages[0].setData(data, PagePosition.previous, 0, itemsPerPage);
-      this.__pages[1].setData(data, PagePosition.middle, itemsPerPage, itemsPerPage2x);
-      this.__pages[2].setData(data, PagePosition.next, itemsPerPage2x, itemsPerPage * 3);
-    } else if (data.length > itemsPerPage) {
-      if (initiallyScrollToEnd) {
-        this.__pages[0].setData(data, PagePosition.previous, 0, data.length - itemsPerPage);
-        this.__pages[1].setData(data, PagePosition.middle, data.length - itemsPerPage, data.length);
+      this.__pages[0].setData(data, PagePosition.previous, 0, this.itemsPerPage);
+      this.__pages[1].setData(data, PagePosition.middle, this.itemsPerPage, itemsPerPage2x);
+      this.__pages[2].setData(data, PagePosition.next, itemsPerPage2x, this.itemsPerPage * 3);
+    } else if (data.length > this.itemsPerPage) {
+      if (this.initiallyScrollToEnd) {
+        this.__pages[0].setData(data, PagePosition.previous, 0, data.length - this.itemsPerPage);
+        this.__pages[1].setData(data, PagePosition.middle, data.length - this.itemsPerPage, data.length);
       } else {
-        this.__pages[0].setData(data, PagePosition.middle, 0, itemsPerPage);
-        this.__pages[1].setData(data, PagePosition.next, itemsPerPage, data.length);
+        this.__pages[0].setData(data, PagePosition.middle, 0, this.itemsPerPage);
+        this.__pages[1].setData(data, PagePosition.next, this.itemsPerPage, data.length);
       }
     } else if (data.length) {
       this.__pages[0].setData(data, PagePosition.middle);
@@ -132,6 +146,18 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
   }
 };
 
-export function useDataHolder <ItemT extends BaseItemType> (): DataHolder <ItemT> {
-  return useMemo(() => new DataHolderImpl <ItemT> (), []);
+export function useDataHolder <ItemT extends BaseItemType> (
+  initializer?: (dataHolder: DataHolder <ItemT>) => void,
+  deps: DependencyList = []
+  
+): DataHolder <ItemT> {
+  return useMemo(() => {
+    const dataHolder = new DataHolderImpl <ItemT> ();
+    
+    if (initializer) {
+      initializer(dataHolder);
+    }
+    
+    return dataHolder;
+  }, deps);
 };
