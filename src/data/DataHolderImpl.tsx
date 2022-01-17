@@ -27,7 +27,7 @@ export class DataHolderImpl <ItemT extends BaseItemType> implements DataHolder <
       itemsPerPage = 50
     } = {}
   ): void {
-    const maxLength = 3 * itemsPerPage;
+    const maxLength = this.__pages.length * itemsPerPage;
     
     if (data.length > maxLength) {
       throw new RangeError(`Dataset size (${data.length}) can't exceed ${maxLength}`);
