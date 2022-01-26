@@ -1,0 +1,17 @@
+setNextData(data: ReadonlyArray <ItemT>): void {
+  const previous = this.__getPage(PagePosition.previous);
+  const middle = this.__getPage(PagePosition.middle);
+  const next = this.__getPage(PagePosition.next);
+  
+  previous.setData(data, PagePosition.next);
+  middle.position = PagePosition.previous;
+  next.position = PagePosition.middle;
+}
+
+
+function usePageMethods(ref: ForwardedRef <PageRef>) {
+  useImperativeHandle(ref, () => ({
+  }), []);
+}
+
+
